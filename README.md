@@ -11,3 +11,7 @@ Gestore di partite per Yu-Gi-Oh! giocato con le carte fisiche.
 **Apri l'app:** https://duelmanager.github.io
 
 Funziona nel browser e si può installare sul telefono ("Aggiungi a schermata Home").
+
+---
+
+© 2026 DuelManager · Tutti i diritti riservati. Il codice è visibile solo per consultazione: vedi [LICENSE](LICENSE).
