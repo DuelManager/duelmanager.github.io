@@ -34,8 +34,14 @@ self.addEventListener("fetch", (ev) => {
     url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com";
   if (!daSalvare) return;
 
+  // Per i file dell'app chiediamo sempre al server se sono cambiati ("no-cache"):
+  // senza, il browser potrebbe riusare per qualche minuto una copia vecchia.
+  const daScaricare = url.origin === self.location.origin
+    ? new Request(richiesta.url, { cache: "no-cache", credentials: "same-origin" })
+    : richiesta;
+
   ev.respondWith(
-    fetch(richiesta)
+    fetch(daScaricare)
       .then((risposta) => {
         if (risposta && (risposta.ok || risposta.type === "opaque")) {
           const copia = risposta.clone();
