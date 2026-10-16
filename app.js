@@ -1,0 +1,286 @@
+// =============================================================
+// app.js — navigazione tra le schermate, Home, regole e impostazioni,
+// timer di sottofondo, tastiera e avvio. Va caricato per ultimo.
+// =============================================================
+
+const SCHERMATE = {
+  "home": "#home",
+  "setup-duello": "#setup",
+  "setup-torneo": "#setup-torneo",
+  "setup-giocatori": "#setup-giocatori",
+  "caricamento": "#caricamento",
+  "tabellone": "#tabellone",
+  "tavolo": "#tavolo",
+};
+
+function mostraSoloElemento(nomeSchermata) {
+  for (const [k, sel] of Object.entries(SCHERMATE)) $(sel).hidden = k !== nomeSchermata;
+}
+
+// ---------- Finestre (regole, impostazioni, pannello del match) ----------
+
+function apriDialogo(d) {
+  if (d.open) return;
+  if (typeof d.showModal === "function") d.showModal();
+  else d.setAttribute("open", "");
+}
+
+function chiudiDialogo(d) {
+  if (!d.open) return;
+  if (typeof d.close === "function") d.close();
+  else d.removeAttribute("open");
+}
+
+function chiudiTutteLeFinestre() {
+  $$("dialog").forEach(chiudiDialogo);
+  pannelloId = null;
+}
+
+$$("dialog").forEach((d) => {
+  // Clic sullo sfondo scuro: chiude la finestra
+  d.addEventListener("click", (ev) => {
+    if (ev.target === d) chiudiDialogo(d);
+  });
+});
+document.addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-chiudi]");
+  if (b) chiudiDialogo(b.closest("dialog"));
+});
+
+// ---------- Navigazione ----------
+
+// Cambia schermata e ridisegna quella nuova
+function vai(s) {
+  chiudiTutteLeFinestre();
+  if (s !== "tavolo") {
+    app.matchAperto = null;
+    partita = null;
+    rilasciaSchermo();
+  }
+  app.schermata = s;
+  mostraSoloElemento(s);
+  disegnaSchermata();
+  if (s === "tavolo") {
+    azzeraDelta();
+    tieniSchermoAcceso();
+  }
+  salva();
+  window.scrollTo(0, 0);
+}
+
+// Ridisegna la schermata aperta (dopo un cambio di lingua o di dati)
+function disegnaSchermata() {
+  sincronizzaCronologia();
+  const s = app.schermata;
+  if (s === "home") disegnaHome();
+  else if (s === "setup-duello") preparaSetupDuello();
+  else if (s === "setup-torneo") preparaSetupTorneo();
+  else if (s === "setup-giocatori") preparaSetupGiocatori();
+  else if (s === "tabellone") disegnaTabellone();
+  else if (s === "tavolo") disegnaTavolo();
+}
+
+// Qualsiasi pulsante con data-vai="schermata"
+document.addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-vai]");
+  if (b) vai(b.dataset.vai);
+});
+
+// ---------- Home ----------
+
+function disegnaHome() {
+  const d = app.duello && app.duello.partita;
+  if (d) {
+    const esito = esitoDuelloLibero(d);   // nel Casual conta anche un duel finito senza "Rivincita"
+    const finito = esito !== null;
+    let dettaglio;
+    if (!finito) {
+      dettaglio = `${esc(d.giocatori[0].nome)} ${lp(d.duel, 0)} · ${esc(d.giocatori[1].nome)} ${lp(d.duel, 1)}`;
+    } else if (esito === "doppia sconfitta") {
+      dettaglio = tr("home.doppia");
+    } else if (esito === "pareggio") {
+      dettaglio = tr("cr.pareggio");
+    } else {
+      dettaglio = tr("home.havinto", { nome: esc(d.giocatori[esito].nome) });
+    }
+    $("#azioni-duello").innerHTML = `
+      <div class="in-corso-info">
+        <span class="label">${tr(finito ? "home.duello.ultimo" : "home.duello.incorso")}</span>
+        <span class="dett">${dettaglio}</span>
+      </div>
+      <button type="button" class="btn btn-primario" data-home="riprendi-duello">${tr(finito ? "home.vedi" : "home.riprendi.duello")}</button>
+      <button type="button" class="btn" data-home="nuovo-duello">${tr("home.nuovo.duello")}</button>`;
+  } else {
+    $("#azioni-duello").innerHTML =
+      `<button type="button" class="btn btn-primario btn-grande" data-home="nuovo-duello">${tr("home.nuovo.duello")}</button>`;
+  }
+
+  const t = app.torneo;
+  if (t) {
+    let dettaglio;
+    if (t.concluso) {
+      if (t.formato === "eliminazione") {
+        dettaglio = t.campione !== null
+          ? tr("home.campione", { nome: esc(nomeGiocatore(t, t.campione)) })
+          : tr("home.senzavincitore");
+      } else {
+        dettaglio = tr("home.primo", { nome: esc(classifica(t)[0].nome) });
+      }
+    } else {
+      const turno = t.turni[t.turnoCorrente];
+      const reali = turno.partite.filter(matchReale);
+      const fatte = reali.filter((m) => m.stato === "conclusa").length;
+      const nomeT = t.formato === "punti"
+        ? tr("tab.turnodi", { n: t.turnoCorrente + 1, tot: t.numeroTurni })
+        : nomeTurno(t, t.turnoCorrente);
+      dettaglio = tr("home.concluse", { turno: esc(nomeT), fatte, tot: reali.length });
+    }
+    $("#azioni-torneo").innerHTML = `
+      <div class="in-corso-info">
+        <span class="label">${tr(t.concluso ? "home.torneo.ultimo" : "home.torneo.incorso")}</span>
+        <span class="dett">${dettaglio}</span>
+      </div>
+      <button type="button" class="btn btn-primario" data-vai="tabellone">${tr(t.concluso ? "home.vedi" : "home.riprendi.torneo")}</button>
+      <button type="button" class="btn" data-home="nuovo-torneo">${tr("home.nuovo.torneo")}</button>`;
+  } else {
+    $("#azioni-torneo").innerHTML =
+      `<button type="button" class="btn btn-primario btn-grande" data-home="nuovo-torneo">${tr("home.nuovo.torneo")}</button>`;
+  }
+}
+
+$("#home").addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-home]");
+  if (!b) return;
+  const azione = b.dataset.home;
+  if (azione === "riprendi-duello" && app.duello) {
+    app.matchAperto = null;
+    apriTavolo(app.duello.partita);
+  } else if (azione === "nuovo-duello") {
+    // Una partita nuova dalla Home riparte con i nomi di base
+    impostaNomiSetup(null);
+    vai("setup-duello");
+  } else if (azione === "nuovo-torneo") {
+    bozza().nomi = [];
+    vai("setup-torneo");
+  }
+});
+
+// ---------- Regole e impostazioni ----------
+
+$("#apri-regole").addEventListener("click", () => {
+  $("#regole-corpo").scrollTop = 0;
+  apriDialogo($("#dialogo-regole"));
+});
+
+$("#apri-impostazioni").addEventListener("click", () => {
+  $(`#lingua-${lingua()}`).checked = true;
+  aggiornaBottoniSuono();
+  apriDialogo($("#dialogo-impostazioni"));
+});
+
+$$("input[name=lingua]").forEach((r) => r.addEventListener("change", () => {
+  app.lingua = r.value;
+  applicaLingua();
+  disegnaSchermata();
+  salva();
+}));
+
+// ---------- Timer di sottofondo ----------
+// Controlla tutte le partite con il tempo che scorre, anche quelle non mostrate:
+// i match del torneo vanno avanti sui loro tavoli mentre sullo schermo c'è altro.
+
+function partiteAttive() {
+  const lista = [];
+  if (app.duello && app.duello.partita && !app.duello.partita.finita) {
+    lista.push({ p: app.duello.partita, match: null });
+  }
+  if (app.torneo) {
+    for (const m of matchInCorso(app.torneo)) {
+      if (m.partita && !m.partita.finita) lista.push({ p: m.partita, match: m });
+    }
+  }
+  return lista;
+}
+
+function ridisegnaSchermata() {
+  disegnaSchermata();
+  if (app.schermata === "tabellone" && pannelloId) disegnaPannello();
+  salva();
+}
+
+setInterval(() => {
+  const ora = Date.now();
+  let cambiato = false;
+  for (const { p, match } of partiteAttive()) {
+    const resto = tempoRimanente(p.timer, ora);
+    if (resto !== null && p.timer.avviatoAlle !== null && !p.avvisoDato && resto > 0 && resto <= AVVISO_MS) {
+      p.avvisoDato = true;
+      SUONI.avviso();
+      if (p !== partita) avvisa(tr("toast.5min", { chi: match ? descriviMatch(app.torneo, match) : tr("duello") }));
+      cambiato = true;
+    }
+    const eraFinita = p.finita;
+    controllaTempo(p, ora);
+    if (!eraFinita && p.finita) {
+      SUONI.scaduto();
+      if (match) registraDaPartita(app.torneo, match.id);
+      if (p !== partita) {
+        avvisa(match ? tr("toast.scadutoIn", { chi: descriviMatch(app.torneo, match) }) : tr("toast.scaduto"));
+      }
+      cambiato = true;
+    }
+  }
+  if (cambiato) {
+    ridisegnaSchermata();
+  } else if (app.schermata === "tavolo") {
+    disegnaTimer();
+  } else if (app.schermata === "tabellone") {
+    aggiornaOrologiTabellone();
+  }
+}, 250);
+
+// ---------- Tastiera (solo sul tavolo) ----------
+
+document.addEventListener("keydown", (ev) => {
+  if (app.schermata !== "tavolo" || !partita || $("dialog[open]")) return;
+  const t = ev.target;
+  if (t.matches("input, select, textarea")) {
+    if (ev.key === "Escape") t.blur();
+    return;
+  }
+  if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+  const k = ev.key.toLowerCase();
+  if (k === " " || k === "n") {
+    ev.preventDefault();
+    faseSuccessiva();
+  } else if (k === "z") {
+    annullaConSuono();
+  } else if (k === "p" && partita.timer.durataMs !== null && !partita.finita) {
+    $("#btn-pausa").click();
+  } else if (k === "1" || k === "2") {
+    const input = $(`#input-lp-${Number(k) - 1}`);
+    if (!input.disabled) {
+      ev.preventDefault();
+      input.focus();
+    }
+  }
+});
+
+// ---------- Avvio ----------
+
+(function avvio() {
+  const salvato = carica();
+  if (salvato) app = salvato;
+  if (!LINGUE.includes(app.lingua)) app.lingua = linguaPredefinita();
+  applicaLingua();
+
+  // Non far suonare avvisi dei 5 minuti già passati
+  for (const { p } of partiteAttive()) {
+    const r = tempoRimanente(p.timer, Date.now());
+    if (r !== null && r <= AVVISO_MS) p.avvisoDato = true;
+  }
+
+  // All'apertura si parte sempre dalla Home: un duello o un torneo lasciati a metà
+  // si riprendono da lì con "Riprendi"
+  vai("home");
+})();
