@@ -331,7 +331,8 @@ function avviaApertura() {
   const chiudi = () => {
     if (chiusa) return;
     chiusa = true;
-    schermata.classList.add("chiude");                       // sfuma
+    radice.classList.add("apertura-via");                    // la Home torna visibile sotto
+    schermata.classList.add("chiude");                       // e l'apertura sfuma
     setTimeout(() => radice.classList.add("app-aperta"), ridotto ? 0 : 400);
   };
   setTimeout(chiudi, ridotto ? 800 : 1600);

@@ -72,7 +72,7 @@ html, body {
 /* Sfondo generale (sull'iPhone si vede anche nella striscia in fondo, fuori dalla pagina):
    con una finestra aperta si scurisce come il resto dello schermo */
 html { background: var(--bg); }
-html.con-finestra { background: var(--sfondo-finestra); }
+html.con-finestra, html.con-finestra body { background: var(--sfondo-finestra); }
 body {
   position: fixed; inset: 0;
   background: var(--bg); color: var(--ink);
@@ -81,6 +81,7 @@ body {
 .schermo {
   position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto;
   overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  background: var(--bg);
   padding:
     max(16px, var(--alto)) max(16px, env(safe-area-inset-right, 0px))
     max(24px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
@@ -983,6 +984,8 @@ details.giocati[open] > summary { margin-bottom: 4px; }
        (hover: none) and (pointer: coarse) and (max-height: 600px) {
   :root:not(.app-aperta) { background: #0d0c18; }
   :root:not(.app-aperta) .apertura { display: grid; }
+  :root:not(.app-aperta):not(.apertura-via) body { background: #0d0c18; }
+  :root:not(.app-aperta):not(.apertura-via) .schermo { visibility: hidden; }
 }
 .apertura {
   position: fixed; inset: 0; z-index: 50;
@@ -1513,16 +1516,16 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="partita.js?v=202610171252"></script>
-<script src="torneo.js?v=202610171252"></script>
-<script src="cronologia.js?v=202610171252"></script>
-<script src="base.js?v=202610171252"></script>
-<script src="lingua.js?v=202610171252"></script>
-<script src="duello.js?v=202610171252"></script>
-<script src="torneo-ui.js?v=202610171252"></script>
-<script src="cronologia-ui.js?v=202610171252"></script>
-<script src="app.js?v=202610171252"></script>
+<script src="partita.js?v=202610171301"></script>
+<script src="torneo.js?v=202610171301"></script>
+<script src="cronologia.js?v=202610171301"></script>
+<script src="base.js?v=202610171301"></script>
+<script src="lingua.js?v=202610171301"></script>
+<script src="duello.js?v=202610171301"></script>
+<script src="torneo-ui.js?v=202610171301"></script>
+<script src="cronologia-ui.js?v=202610171301"></script>
+<script src="app.js?v=202610171301"></script>
 
-<script src="pwa.js?v=202610171252"></script>
+<script src="pwa.js?v=202610171301"></script>
 </body>
 </html>
