@@ -38,6 +38,7 @@
   --font-num: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --font-body: "Barlow", "Segoe UI", system-ui, sans-serif;
   --radius: 10px;
+  --sfondo-finestra: rgb(111 113 118);   /* --bg sotto lo sfondo scuro delle finestre */
   /* Margini sicuri. Sull'iPhone, sotto l'ora, c'è anche una fascia sfocata alta circa
      quanto la barra di stato: la lasciamo libera. Senza tacca (computer, Android) valgono 0. */
   --alto: calc(env(safe-area-inset-top, 0px) + min(env(safe-area-inset-top, 0px), 56px));
@@ -47,14 +48,14 @@
   :root:not([data-theme="light"]) {
     --bg: #0e1219; --surface: #161c27; --surface-2: #1c2331; --ink: #e8ebf1; --muted: #97a0b3;
     --line: #2a3244; --p0: #5ba5e6; --p1: #e2689f; --warn: #f2a83a; --danger: #f05a5a; --ok: #4fbf82;
-    --oro: #e2b54a; --stella: #f5c518; --stella-spenta: #3d475c;
+    --oro: #e2b54a; --stella: #f5c518; --stella-spenta: #3d475c; --sfondo-finestra: rgb(11 14 20);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0e1219; --surface: #161c27; --surface-2: #1c2331; --ink: #e8ebf1; --muted: #97a0b3;
   --line: #2a3244; --p0: #5ba5e6; --p1: #e2689f; --warn: #f2a83a; --danger: #f05a5a; --ok: #4fbf82;
-  --oro: #e2b54a; --stella: #f5c518; --stella-spenta: #3d475c;
+  --oro: #e2b54a; --stella: #f5c518; --stella-spenta: #3d475c; --sfondo-finestra: rgb(11 14 20);
   color-scheme: dark;
 }
 
@@ -68,6 +69,10 @@ html, body {
   height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none;
   -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
 }
+/* Sfondo generale (sull'iPhone si vede anche nella striscia in fondo, fuori dalla pagina):
+   con una finestra aperta si scurisce come il resto dello schermo */
+html { background: var(--bg); }
+html.con-finestra { background: var(--sfondo-finestra); }
 body {
   position: fixed; inset: 0;
   background: var(--bg); color: var(--ink);
@@ -1408,16 +1413,16 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="partita.js?v=202610171145"></script>
-<script src="torneo.js?v=202610171145"></script>
-<script src="cronologia.js?v=202610171145"></script>
-<script src="base.js?v=202610171145"></script>
-<script src="lingua.js?v=202610171145"></script>
-<script src="duello.js?v=202610171145"></script>
-<script src="torneo-ui.js?v=202610171145"></script>
-<script src="cronologia-ui.js?v=202610171145"></script>
-<script src="app.js?v=202610171145"></script>
+<script src="partita.js?v=202610171149"></script>
+<script src="torneo.js?v=202610171149"></script>
+<script src="cronologia.js?v=202610171149"></script>
+<script src="base.js?v=202610171149"></script>
+<script src="lingua.js?v=202610171149"></script>
+<script src="duello.js?v=202610171149"></script>
+<script src="torneo-ui.js?v=202610171149"></script>
+<script src="cronologia-ui.js?v=202610171149"></script>
+<script src="app.js?v=202610171149"></script>
 
-<script src="pwa.js?v=202610171145"></script>
+<script src="pwa.js?v=202610171149"></script>
 </body>
 </html>
