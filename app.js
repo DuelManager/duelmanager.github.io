@@ -315,6 +315,29 @@ document.addEventListener("keydown", (ev) => {
   }
 });
 
+// ---------- Apertura (solo telefoni) ----------
+// La schermata con logo e nome al neon è già visibile dal CSS: qui la si chiude
+// dopo poco (o subito toccandola). Sul computer il CSS non la mostra e si passa oltre.
+
+function avviaApertura() {
+  const schermata = $("#apertura");
+  const radice = document.documentElement;
+  if (getComputedStyle(schermata).display === "none") {
+    radice.classList.add("app-aperta");
+    return;
+  }
+  const ridotto = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let chiusa = false;
+  const chiudi = () => {
+    if (chiusa) return;
+    chiusa = true;
+    schermata.classList.add("chiude");                       // sfuma
+    setTimeout(() => radice.classList.add("app-aperta"), ridotto ? 0 : 400);
+  };
+  setTimeout(chiudi, ridotto ? 800 : 1600);
+  schermata.addEventListener("click", chiudi);
+}
+
 // ---------- Avvio ----------
 
 (function avvio() {
@@ -332,4 +355,5 @@ document.addEventListener("keydown", (ev) => {
   // All'apertura si parte sempre dalla Home: un duello o un torneo lasciati a metà
   // si riprendono da lì con "Riprendi"
   vai("home");
+  avviaApertura();
 })();

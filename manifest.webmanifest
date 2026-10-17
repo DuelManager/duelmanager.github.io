@@ -6,11 +6,26 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0e1219",
+  "background_color": "#0d0c18",
   "theme_color": "#151a24",
   "icons": [
-    { "src": "icona-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icona-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "icona-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icona-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icona-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icona-tonda-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
