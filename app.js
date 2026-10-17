@@ -148,8 +148,9 @@ function disegnaHome() {
     } else {
       dettaglio = tr("home.havinto", { nome: esc(d.giocatori[esito].nome) });
     }
+    // In corso: riquadro con il bordo arancione e il pallino, come le partite in corso nel tabellone
     $("#azioni-duello").innerHTML = `
-      <div class="in-corso-info">
+      <div class="in-corso-info ${finito ? "" : "attiva"}">
         <span class="label">${tr(finito ? "home.duello.ultimo" : "home.duello.incorso")}</span>
         <span class="dett">${dettaglio}</span>
       </div>
@@ -181,7 +182,7 @@ function disegnaHome() {
       dettaglio = tr("home.concluse", { turno: esc(nomeT), fatte, tot: reali.length });
     }
     $("#azioni-torneo").innerHTML = `
-      <div class="in-corso-info">
+      <div class="in-corso-info ${t.concluso ? "" : "attiva"}">
         <span class="label">${tr(t.concluso ? "home.torneo.ultimo" : "home.torneo.incorso")}</span>
         <span class="dett">${dettaglio}</span>
       </div>

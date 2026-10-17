@@ -310,6 +310,12 @@ kbd {
   border: 1px solid var(--line); border-radius: 8px; min-width: 0;
 }
 .in-corso-info .dett { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+/* Duello o torneo ancora in corso: come le partite in corso nel tabellone (bordo arancione e pallino) */
+.in-corso-info.attiva { background: var(--surface); border-color: var(--warn); }
+.in-corso-info.attiva .label { display: flex; align-items: center; gap: 7px; }
+.in-corso-info.attiva .label::before {
+  content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--warn);
+}
 
 /* ---------- Setup torneo ---------- */
 .contatore {
@@ -1413,16 +1419,16 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="partita.js?v=202610171149"></script>
-<script src="torneo.js?v=202610171149"></script>
-<script src="cronologia.js?v=202610171149"></script>
-<script src="base.js?v=202610171149"></script>
-<script src="lingua.js?v=202610171149"></script>
-<script src="duello.js?v=202610171149"></script>
-<script src="torneo-ui.js?v=202610171149"></script>
-<script src="cronologia-ui.js?v=202610171149"></script>
-<script src="app.js?v=202610171149"></script>
+<script src="partita.js?v=202610171228"></script>
+<script src="torneo.js?v=202610171228"></script>
+<script src="cronologia.js?v=202610171228"></script>
+<script src="base.js?v=202610171228"></script>
+<script src="lingua.js?v=202610171228"></script>
+<script src="duello.js?v=202610171228"></script>
+<script src="torneo-ui.js?v=202610171228"></script>
+<script src="cronologia-ui.js?v=202610171228"></script>
+<script src="app.js?v=202610171228"></script>
 
-<script src="pwa.js?v=202610171149"></script>
+<script src="pwa.js?v=202610171228"></script>
 </body>
 </html>
