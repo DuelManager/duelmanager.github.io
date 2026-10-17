@@ -38,6 +38,10 @@
   --font-num: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --font-body: "Barlow", "Segoe UI", system-ui, sans-serif;
   --radius: 10px;
+  /* Margini sicuri. Sull'iPhone, sotto l'ora, c'è anche una fascia sfocata alta circa
+     quanto la barra di stato: la lasciamo libera. Senza tacca (computer, Android) valgono 0. */
+  --alto: calc(env(safe-area-inset-top, 0px) + min(env(safe-area-inset-top, 0px), 56px));
+  --basso: calc(env(safe-area-inset-bottom, 0px) + min(env(safe-area-inset-bottom, 0px), 16px));
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -73,7 +77,7 @@ body {
   position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto;
   overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
   padding:
-    max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px))
+    max(16px, var(--alto)) max(16px, env(safe-area-inset-right, 0px))
     max(24px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
 }
 .con-finestra .schermo { overflow: hidden; }
@@ -470,14 +474,14 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   --largh: 500px;
   border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink);
   padding: 0; overflow: hidden; overscroll-behavior: contain;
-  inset-block-start: env(safe-area-inset-top, 0px);
-  inset-block-end: env(safe-area-inset-bottom, 0px);
+  inset-block-start: var(--alto);
+  inset-block-end: var(--basso);
   inset-inline-start: env(safe-area-inset-left, 0px);
   inset-inline-end: env(safe-area-inset-right, 0px);
   width: min(var(--largh), calc(100% - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
   max-width: none;
   height: -webkit-fit-content; height: fit-content;
-  max-height: calc(100% - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  max-height: calc(100% - 24px - var(--alto) - var(--basso));
   margin: auto;
 }
 .pannello[open] { display: flex; flex-direction: column; }
@@ -517,9 +521,13 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 .riga-punteggio { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
 /* ---------- Icone della Home, regole, impostazioni ---------- */
-.home-testa { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+/* Home: titolo a sinistra, icone a destra, riquadri sotto (sul telefono le icone vanno in fondo) */
+.home { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "testa icone" "scelte scelte"; column-gap: 16px; }
+.home-testa { grid-area: testa; min-width: 0; }
 .home-testo { display: grid; gap: 6px; min-width: 0; }
-.icone { display: flex; gap: 8px; flex: none; }
+.icone { grid-area: icone; align-self: start; display: flex; gap: 8px; }
+.scelte { grid-area: scelte; }
+.icona-testo { display: none; }
 .icona {
   width: 44px; height: 44px; border-radius: 50%; padding: 0; display: grid; place-items: center;
   border: 1px solid var(--line); background: var(--surface); color: var(--ink);
@@ -550,10 +558,6 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 .interruttore[aria-checked="true"] { background: var(--p0); border-color: var(--p0); }
 .interruttore[aria-checked="true"]::after { transform: translateX(22px); background: var(--surface); }
 
-@media (max-width: 560px) {
-  .home-testa { flex-direction: column-reverse; gap: 12px; }
-  .icone { align-self: flex-end; }
-}
 
 /* ---------- Stella dei preferiti ---------- */
 .stella {
@@ -695,7 +699,7 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 /* ---------- "Gira il telefono" ---------- */
 .ruota {
   display: none; position: fixed; inset: 0; z-index: 25; background: var(--bg);
-  padding: max(24px, env(safe-area-inset-top, 0px)) 24px max(24px, env(safe-area-inset-bottom, 0px));
+  padding: max(24px, var(--alto)) 24px max(24px, env(safe-area-inset-bottom, 0px));
   align-content: center; justify-items: center; gap: 14px; text-align: center;
 }
 .ruota svg { width: 88px; height: 88px; animation: gira 2.6s ease-in-out infinite; }
@@ -731,6 +735,17 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   .editor-corpo { padding-block: 10px 12px; }
   .titolo-dialogo { font-size: 1.35rem; }
   .pannello-titolo { font-size: 1.45rem; }
+}
+
+/* Telefono in verticale: le quattro icone scendono sotto i riquadri, con il nome */
+@media (max-width: 600px) {
+  .home { grid-template-columns: minmax(0, 1fr); grid-template-areas: "testa" "scelte" "icone"; }
+  .icone { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .icona { width: auto; height: auto; border-radius: 12px; padding: 11px 2px 9px; gap: 5px; }
+  .icona-testo {
+    display: block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-family: var(--font-num); font-size: .85rem; font-weight: 600; line-height: 1.1; color: var(--muted);
+  }
 }
 
 /* =============================================================
@@ -818,7 +833,7 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 @media (max-height: 540px) and (orientation: landscape) {
   .schermo {
     padding:
-      max(8px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px))
+      max(8px, var(--alto)) max(12px, env(safe-area-inset-right, 0px))
       max(8px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
   }
 
@@ -829,7 +844,7 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   .editor-lp .finestra-testa { padding-block: 8px; }
 
   /* Home: titolo e icone sulla stessa riga */
-  .home-testa { flex-direction: row; align-items: center; }
+  .icone { align-self: center; }
   .home-testa h1 { font-size: 2.1rem; }
 
   /* Finestra del match: nomi e stato su una riga, le due sezioni affiancate */
@@ -848,23 +863,26 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   #setup-giocatori {
     max-width: none; height: 100%; padding: 10px 14px; gap: 6px 14px; align-content: stretch;
     grid-template-columns: auto minmax(0, 1fr) auto auto;
-    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(2.6rem, auto) minmax(0, 1fr) auto;   /* riga sotto: sempre alta 2 righe */
     grid-template-areas:
       "indietro titolo contatore crea"
-      "riepilogo riepilogo info info"
+      "sotto sotto sotto sotto"
       "nomi nomi nomi nomi"
       "errore errore nota nota";
   }
   #setup-giocatori > .sg-testa, #setup-giocatori > .sg-numero, #setup-giocatori > .sg-nomi { display: contents; }
   #setup-giocatori .indietro { grid-area: indietro; align-self: center; }
-  #setup-giocatori .titolo-setup { grid-area: titolo; align-self: center; min-width: 0; gap: 0 10px; }
+  #setup-giocatori .titolo-setup { grid-area: titolo; align-self: center; min-width: 0; gap: 0 10px; flex-wrap: nowrap; overflow: hidden; }
+  #setup-giocatori .titolo-setup .label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   #setup-giocatori h1 { font-size: 1.6rem; }
-  #riepilogo-torneo { grid-area: riepilogo; align-self: center; font-size: .85rem; }
+  /* Riepilogo a sinistra e informazioni a destra nella stessa riga: occupano tutta la larghezza,
+     così un testo lungo (i bye) va a capo da solo senza spostare la riga sopra */
+  #riepilogo-torneo { grid-area: sotto; justify-self: start; align-self: start; max-width: 46%; font-size: .85rem; }
   #etichetta-num, #setup-giocatori .sg-nomi > .label { display: none; }
   #setup-giocatori .contatore { grid-area: contatore; align-self: center; }
   #setup-giocatori .contatore button { width: 40px; height: 40px; }
   #setup-giocatori .contatore output { min-width: 48px; font-size: 1.5rem; }
-  #info-giocatori { grid-area: info; align-self: center; text-align: right; font-size: .8rem; }
+  #info-giocatori { grid-area: sotto; justify-self: end; align-self: start; max-width: 52%; text-align: right; font-size: .85rem; }
   #griglia-nomi {
     grid-area: nomi; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px 12px;
     align-content: start; min-height: 0; overflow-y: auto; overscroll-behavior: contain; columns: auto; padding: 2px;
@@ -896,14 +914,19 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   .avanz-conta { font-size: .85rem; }
   .avanz-azione { grid-area: azione; align-self: center; }
   .btn-prosegui { padding: 7px 14px; font-size: 1.05rem; }
-  #vista-torneo { grid-area: vista; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  #vista-torneo {
+    grid-area: vista; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+    display: flex; flex-direction: column;
+  }
   #vista-torneo > * + * { margin-top: 10px; }
 
-  .bracket-scroll { height: 100%; overflow: auto; overscroll-behavior: contain; padding: 8px 12px 10px; }
-  .bracket {
-    column-gap: 32px; grid-template-columns: repeat(var(--colonne), minmax(156px, 1fr));
-    min-width: calc(var(--colonne) * 156px + (var(--colonne) - 1) * 32px);
+  /* Tabellone piccolo: al centro, con il bordo che segue la sua misura.
+     Tabellone grande: occupa al massimo lo spazio libero e scorre al suo interno. */
+  .bracket-scroll {
+    flex: none; margin: auto; width: fit-content; max-width: 100%; max-height: 100%;
+    overflow: auto; overscroll-behavior: contain; padding: 8px 14px 10px;
   }
+  .bracket { column-gap: 32px; grid-template-columns: repeat(var(--colonne), 168px); width: max-content; min-width: 0; }
   .colonna { gap: 6px; }
   .colonna-testa { height: 18px; }
   .colonna-corpo { min-height: calc(var(--righe) * 64px); }
@@ -957,33 +980,37 @@ details.giocati[open] > summary { margin-bottom: 4px; }
         <h1 data-t="home.titolo">Gestore partite</h1>
         <p data-t="home.desc">Life point, fasi e timer per i duel al tavolo. Tornei con sorteggio, tabellone e classifica.</p>
       </div>
-      <div class="icone">
-        <button type="button" class="icona" id="apri-cronologia" data-t-aria="home.cronologia" data-t-title="home.cronologia" aria-label="Cronologia partite" title="Cronologia partite">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
-          </svg>
-        </button>
-        <button type="button" class="icona" id="apri-preferiti" data-t-aria="home.preferiti" data-t-title="home.preferiti" aria-label="Preferiti" title="Preferiti">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-          </svg>
-        </button>
-        <button type="button" class="icona" id="apri-regole" data-t-aria="home.regole" data-t-title="home.regole" aria-label="Regole" title="Regole">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-          </svg>
-        </button>
-        <button type="button" class="icona" id="apri-impostazioni" data-t-aria="home.impostazioni" data-t-title="home.impostazioni" aria-label="Impostazioni" title="Impostazioni">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-        </button>
-      </div>
     </header>
+    <div class="icone">
+      <button type="button" class="icona" id="apri-cronologia" data-t-aria="home.cronologia" data-t-title="home.cronologia" aria-label="Cronologia partite" title="Cronologia partite">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span class="icona-testo" data-t="cr.titolo">Cronologia</span>
+      </button>
+      <button type="button" class="icona" id="apri-preferiti" data-t-aria="home.preferiti" data-t-title="home.preferiti" aria-label="Preferiti" title="Preferiti">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+        <span class="icona-testo" data-t="home.preferiti">Preferiti</span>
+      </button>
+      <button type="button" class="icona" id="apri-regole" data-t-aria="home.regole" data-t-title="home.regole" aria-label="Regole" title="Regole">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <span class="icona-testo" data-t="home.regole">Regole</span>
+      </button>
+      <button type="button" class="icona" id="apri-impostazioni" data-t-aria="home.impostazioni" data-t-title="home.impostazioni" aria-label="Impostazioni" title="Impostazioni">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span class="icona-testo" data-t="home.impostazioni">Impostazioni</span>
+      </button>
+    </div>
     <div class="scelte">
       <article class="scelta-grande" data-tipo="duello">
         <div class="scelta-corpo">
@@ -1379,16 +1406,16 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="partita.js?v=202610171105"></script>
-<script src="torneo.js?v=202610171105"></script>
-<script src="cronologia.js?v=202610171105"></script>
-<script src="base.js?v=202610171105"></script>
-<script src="lingua.js?v=202610171105"></script>
-<script src="duello.js?v=202610171105"></script>
-<script src="torneo-ui.js?v=202610171105"></script>
-<script src="cronologia-ui.js?v=202610171105"></script>
-<script src="app.js?v=202610171105"></script>
+<script src="partita.js?v=202610171135"></script>
+<script src="torneo.js?v=202610171135"></script>
+<script src="cronologia.js?v=202610171135"></script>
+<script src="base.js?v=202610171135"></script>
+<script src="lingua.js?v=202610171135"></script>
+<script src="duello.js?v=202610171135"></script>
+<script src="torneo-ui.js?v=202610171135"></script>
+<script src="cronologia-ui.js?v=202610171135"></script>
+<script src="app.js?v=202610171135"></script>
 
-<script src="pwa.js?v=202610171105"></script>
+<script src="pwa.js?v=202610171135"></script>
 </body>
 </html>
