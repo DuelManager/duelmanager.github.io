@@ -486,7 +486,9 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 }
 .pannello[open] { display: flex; flex-direction: column; }
 .pannello:focus { outline: none; }
-.pannello::backdrop { background: rgb(8 10 16 / .55); }
+/* Lo sfondo scuro va oltre il fondo dello schermo: sull'iPhone (app installata) altrimenti
+   in basso resta una striscia chiara alta quanto la barra dell'ora */
+.pannello::backdrop { background: rgb(8 10 16 / .55); inset: 0 0 -200px 0; }
 .pannello.largo { --largh: 680px; }
 .finestra-testa {
   flex: none; display: flex; justify-content: space-between; align-items: center; gap: 8px;
@@ -1406,16 +1408,16 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="partita.js?v=202610171135"></script>
-<script src="torneo.js?v=202610171135"></script>
-<script src="cronologia.js?v=202610171135"></script>
-<script src="base.js?v=202610171135"></script>
-<script src="lingua.js?v=202610171135"></script>
-<script src="duello.js?v=202610171135"></script>
-<script src="torneo-ui.js?v=202610171135"></script>
-<script src="cronologia-ui.js?v=202610171135"></script>
-<script src="app.js?v=202610171135"></script>
+<script src="partita.js?v=202610171145"></script>
+<script src="torneo.js?v=202610171145"></script>
+<script src="cronologia.js?v=202610171145"></script>
+<script src="base.js?v=202610171145"></script>
+<script src="lingua.js?v=202610171145"></script>
+<script src="duello.js?v=202610171145"></script>
+<script src="torneo-ui.js?v=202610171145"></script>
+<script src="cronologia-ui.js?v=202610171145"></script>
+<script src="app.js?v=202610171145"></script>
 
-<script src="pwa.js?v=202610171135"></script>
+<script src="pwa.js?v=202610171145"></script>
 </body>
 </html>
