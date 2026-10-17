@@ -266,25 +266,28 @@ function rigaRisultato(t, m) {
 // ---------- Eventi della finestra ----------
 
 $("#dialogo-cronologia").addEventListener("click", (ev) => {
+  const corpo = $("#cronologia-corpo");
   const scheda = ev.target.closest("[data-scheda]");
   if (scheda) {
     schedaCronologia = scheda.dataset.scheda;
     voceAperta = null;
     if (schedaCronologia === "preferiti") elencoPreferiti = app.preferiti.slice();
     disegnaCronologia();
+    corpo.scrollTop = 0;
     return;
   }
   const apri = ev.target.closest("[data-apri]");
   if (apri) {
     voceAperta = apri.dataset.apri;
     disegnaCronologia();
-    $("#dialogo-cronologia").scrollTop = 0;
+    corpo.scrollTop = 0;
     return;
   }
   if (ev.target.closest("[data-indietro]")) {
     voceAperta = null;
     if (schedaCronologia === "preferiti") elencoPreferiti = app.preferiti.slice();
     disegnaCronologia();
+    corpo.scrollTop = 0;
   }
 });
 

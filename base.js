@@ -162,6 +162,35 @@ document.addEventListener("click", (ev) => {
   salva();
 });
 
+// ---------- Telefono: pagina ferma come un'app ----------
+
+// Schermo da telefono (verticale stretto o orizzontale basso): il tavolo usa la versione compatta.
+// Deve corrispondere alle @media "TELEFONO — tavolo del duello" in index.html.
+const MQ_COMPATTO = window.matchMedia(
+  "(max-width: 600px) and (orientation: portrait), (max-height: 540px) and (orientation: landscape)");
+function compatto() { return MQ_COMPATTO.matches; }
+function quandoCambiaSchermo(funzione) {
+  if (MQ_COMPATTO.addEventListener) MQ_COMPATTO.addEventListener("change", funzione);
+  else if (MQ_COMPATTO.addListener) MQ_COMPATTO.addListener(funzione);   // Safari vecchi
+}
+
+// Niente zoom con due dita: l'iPhone ignora "user-scalable=no", quindi lo blocchiamo qui
+["gesturestart", "gesturechange", "gestureend"].forEach((tipo) =>
+  document.addEventListener(tipo, (ev) => ev.preventDefault(), { passive: false }));
+document.addEventListener("touchmove", (ev) => {
+  if (ev.touches.length > 1 || (typeof ev.scale === "number" && ev.scale !== 1)) ev.preventDefault();
+}, { passive: false });
+// Serve all'iPhone per mostrare l'effetto "premuto" sui pulsanti
+document.addEventListener("touchstart", () => {}, { passive: true });
+
+// Dopo aver scritto (tastiera chiusa) l'iPhone a volte lascia la pagina spostata: la rimettiamo a posto
+document.addEventListener("focusout", () => {
+  setTimeout(() => {
+    const attivo = document.activeElement;
+    if (!attivo || !attivo.matches("input, select, textarea")) window.scrollTo(0, 0);
+  }, 120);
+});
+
 // ---------- Avvisi a comparsa ----------
 
 let timerToast = null;

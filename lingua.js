@@ -256,6 +256,21 @@ const TESTI = {
     "tav.aria.partita": "Partita",
     "tav.aria.cronologia": "Cronologia",
     "tav.aria.fasi": "Vai a una fase",
+    "tav.tocca.lp": "Tocca per cambiare",
+    "tav.strumenti": "Strumenti",
+    "tav.cronologia.breve": "Cronologia",
+
+    // ---------- Tastierino dei life point (telefono) ----------
+    "lp.aria": "Life point di {nome}: {lp}. Tocca per cambiarli",
+    "lp.entrambi": "Entrambi i giocatori",
+    "lp.togli": "Togli",
+    "lp.aggiungi": "Aggiungi",
+    "lp.rapidi": "Tasti rapidi",
+    "lp.cancella": "Cancella una cifra",
+
+    "ruota.titolo": "Gira il telefono",
+    "ruota.testo": "Questa schermata è fatta per il telefono in orizzontale: così si vede tutto senza scorrere.",
+    "ruota.continua": "Continua in verticale",
 
     "es.scaduto": "Tempo scaduto: doppia sconfitta",
     "es.scaduto.sotto": "Nessuno ha vinto il match prima della fine del tempo ({a}–{b}).",
@@ -564,6 +579,21 @@ const TESTI = {
     "tav.aria.partita": "Game",
     "tav.aria.cronologia": "History",
     "tav.aria.fasi": "Go to a phase",
+    "tav.tocca.lp": "Tap to change",
+    "tav.strumenti": "Tools",
+    "tav.cronologia.breve": "History",
+
+    // ---------- Life point keypad (phone) ----------
+    "lp.aria": "{nome}'s life points: {lp}. Tap to change",
+    "lp.entrambi": "Both players",
+    "lp.togli": "Subtract",
+    "lp.aggiungi": "Add",
+    "lp.rapidi": "Quick buttons",
+    "lp.cancella": "Delete a digit",
+
+    "ruota.titolo": "Turn your phone",
+    "ruota.testo": "This screen is made for landscape: that way everything fits without scrolling.",
+    "ruota.continua": "Continue in portrait",
 
     "es.scaduto": "Time's up: double loss",
     "es.scaduto.sotto": "Nobody won the match before time ran out ({a}–{b}).",
@@ -639,6 +669,7 @@ const REGOLE = {
       <h3>Life point</h3>
       <ul>
         <li>Ognuno parte da 8000. Scrivi <kbd>2400</kbd> per togliere o <kbd>+1000</kbd> per aggiungere, oppure usa i tasti rapidi e "Metà".</li>
+        <li>Sul telefono il tavolo si usa in orizzontale. Tocca i life point di un giocatore: si apre un tastierino, scrivi il numero e scegli "Togli" o "Aggiungi", oppure usa i tasti rapidi. Moneta, dado, danno a entrambi e cronologia del duel sono in "Strumenti".</li>
         <li>"Danno a entrambi" toglie lo stesso valore ai due giocatori in un colpo solo: se arrivano a 0 insieme, il duel è in pareggio.</li>
         <li>Ogni cambio finisce nella cronologia con turno e fase. "Annulla" toglie l'ultimo, anche a duel finito, finché non confermi il risultato.</li>
       </ul>
@@ -670,7 +701,7 @@ const REGOLE = {
       </ul>
     </section>
     <section>
-      <h3>Tasti rapidi sul tavolo</h3>
+      <h3>Tasti rapidi sul tavolo (computer)</h3>
       <ul class="tasti-regole">
         <li><kbd>Spazio</kbd> fase successiva</li>
         <li><kbd>Z</kbd> annulla l'ultima modifica</li>
@@ -692,6 +723,7 @@ const REGOLE = {
       <h3>Life points</h3>
       <ul>
         <li>Everyone starts at 8000. Type <kbd>2400</kbd> to subtract or <kbd>+1000</kbd> to add, or use the quick buttons and "Half".</li>
+        <li>On a phone the table is used in landscape. Tap a player's life points: a keypad opens, type the number and choose "Subtract" or "Add", or use the quick buttons. Coin, die, damage to both and the duel history are in "Tools".</li>
         <li>"Damage to both" takes the same amount from both players at once: if both reach 0 together, the duel is a draw.</li>
         <li>Every change goes into the history with its turn and phase. "Undo" removes the last one, even after a duel ends, until you confirm the result.</li>
       </ul>
@@ -723,7 +755,7 @@ const REGOLE = {
       </ul>
     </section>
     <section>
-      <h3>Table shortcuts</h3>
+      <h3>Table shortcuts (computer)</h3>
       <ul class="tasti-regole">
         <li><kbd>Space</kbd> next phase</li>
         <li><kbd>Z</kbd> undo the last change</li>

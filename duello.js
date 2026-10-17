@@ -60,11 +60,12 @@ function costruisciGiocatore(sezione) {
       <span class="badge-turno" data-ruolo="badge" data-t="tav.diturno" hidden></span>
     </div>
     <div class="vittorie" data-ruolo="vittorie"></div>
-    <div class="lp-box">
-      <div class="lp" data-ruolo="lp">8000</div>
-      <div class="lp-sotto" data-t="tav.lp"></div>
-      <div class="delta" data-ruolo="delta"></div>
-    </div>
+    <button type="button" class="lp-box" data-ruolo="lp-apri">
+      <span class="lp" data-ruolo="lp">8000</span>
+      <span class="lp-sotto" data-t="tav.lp"></span>
+      <span class="lp-tocca" data-t="tav.tocca.lp"></span>
+      <span class="delta" data-ruolo="delta"></span>
+    </button>
     <form class="form-lp" novalidate>
       <input class="input" id="input-lp-${g}" data-t-ph="tav.lp.ph" data-t-aria="tav.lp.aria" inputmode="text" autocomplete="off">
       <button type="submit" class="btn btn-primario">OK</button>
@@ -101,15 +102,9 @@ function costruisciGiocatore(sezione) {
   input.addEventListener("input", () => { errore.textContent = ""; input.classList.remove("errore"); });
 
   $$("[data-delta]", sezione).forEach((b) => b.addEventListener("click", () => cambiaLP(g, Number(b.dataset.delta))));
-  $("[data-meta]", sezione).addEventListener("click", () => {
-    if (!partitaInCorso()) return;
-    const prima = lp(partita.duel, g);
-    dimezzaLP(partita, g);
-    const d = lp(partita.duel, g) - prima;
-    mostraDelta(g, d);
-    suonoLP(d);
-    aggiorna();
-  });
+  $("[data-meta]", sezione).addEventListener("click", () => dimezza(g));
+  // Tocco sui life point: tastierino con i tasti rapidi
+  $("[data-ruolo=lp-apri]", sezione).addEventListener("click", () => apriEditorLP(g));
 }
 
 function cambiaLP(g, valore) {
@@ -121,6 +116,155 @@ function cambiaLP(g, valore) {
   suonoLP(d);
   aggiorna();
 }
+
+function dimezza(g) {
+  if (!partitaInCorso()) return;
+  const prima = lp(partita.duel, g);
+  dimezzaLP(partita, g);
+  const d = lp(partita.duel, g) - prima;
+  mostraDelta(g, d);
+  suonoLP(d);
+  aggiorna();
+}
+
+// Stesso valore a entrambi i giocatori (negativo = danno)
+function cambiaLPEntrambi(valore) {
+  if (!partitaInCorso()) return;
+  const prima = [lp(partita.duel, 0), lp(partita.duel, 1)];
+  modificaLPEntrambi(partita, valore, valore);
+  mostraDelta(0, lp(partita.duel, 0) - prima[0]);
+  mostraDelta(1, lp(partita.duel, 1) - prima[1]);
+  suonoLP(valore);
+  aggiorna();
+}
+
+// ---------- Tastierino dei life point ----------
+// Si scrive il numero e si sceglie "Togli" o "Aggiungi"; i tasti rapidi valgono subito.
+// Ogni modifica chiude il tastierino: il nuovo valore si vede sul tavolo.
+
+const MAX_CIFRE = 6;
+let editorLP = { chi: 0, valore: "" };   // chi: 0 | 1 | "entrambi"
+
+function apriEditorLP(chi) {
+  if (!partitaInCorso()) return;
+  chiudiMenuStrumenti();
+  editorLP = { chi, valore: "" };
+  disegnaEditorLP();
+  apriDialogo($("#dialogo-lp"));
+}
+
+function disegnaEditorLP() {
+  if (!partita) return;
+  const { chi, valore } = editorLP;
+  const entrambi = chi === "entrambi";
+  const finestra = $("#dialogo-lp");
+  finestra.dataset.g = entrambi ? "" : String(chi);
+  $("#lp-titolo").textContent = entrambi ? tr("lp.entrambi") : nome(chi);
+  $("#lp-attuali").textContent = entrambi
+    ? `${lp(partita.duel, 0)} · ${lp(partita.duel, 1)}`
+    : `${lp(partita.duel, chi)} LP`;
+
+  const display = $("#lp-display");
+  display.textContent = valore || "0";
+  display.classList.toggle("vuoto", !valore);
+
+  // Sui due pulsanti si vede già il risultato: "Togli → 5600"
+  const n = Number(valore) || 0;
+  const dopo = (v) => {
+    const calcola = (g) => Math.max(0, lp(partita.duel, g) + v);
+    return entrambi ? `${calcola(0)} · ${calcola(1)}` : String(calcola(chi));
+  };
+  [["#lp-togli", -n], ["#lp-aggiungi", n]].forEach(([id, v]) => {
+    $(id).disabled = n === 0;
+    $(`${id} .anteprima`).textContent = n ? `→ ${dopo(v)}` : "";
+  });
+  $("#lp-meta").hidden = entrambi;
+}
+
+function scriviCifre(cifre) {
+  let v = editorLP.valore;
+  if (v === "" && cifre.startsWith("0")) return;          // niente zeri all'inizio
+  v = (v + cifre).slice(0, MAX_CIFRE);
+  editorLP.valore = v;
+  disegnaEditorLP();
+}
+
+function cancellaCifra() {
+  editorLP.valore = editorLP.valore.slice(0, -1);
+  disegnaEditorLP();
+}
+
+// valore con segno: -2400 toglie, +1000 aggiunge
+function applicaEditorLP(valore) {
+  if (!valore) return;
+  const chi = editorLP.chi;
+  chiudiDialogo($("#dialogo-lp"));
+  if (chi === "entrambi") cambiaLPEntrambi(valore);
+  else cambiaLP(chi, valore);
+}
+
+$("#dialogo-lp").addEventListener("click", (ev) => {
+  const b = ev.target.closest("button");
+  if (!b || b.disabled) return;
+  if (b.dataset.cifra) scriviCifre(b.dataset.cifra);
+  else if (b.hasAttribute("data-cancella")) cancellaCifra();
+  else if (b.id === "lp-togli") applicaEditorLP(-Number(editorLP.valore));
+  else if (b.id === "lp-aggiungi") applicaEditorLP(Number(editorLP.valore));
+  else if (b.dataset.delta) applicaEditorLP(Number(b.dataset.delta));
+  else if (b.id === "lp-meta") {
+    const g = editorLP.chi;
+    chiudiDialogo($("#dialogo-lp"));
+    dimezza(g);
+  }
+});
+
+// Con la tastiera del computer: cifre, Canc, Invio (o -) toglie, + aggiunge
+$("#dialogo-lp").addEventListener("keydown", (ev) => {
+  if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+  const n = Number(editorLP.valore);
+  if (/^[0-9]$/.test(ev.key)) { ev.preventDefault(); scriviCifre(ev.key); }
+  else if (ev.key === "Backspace" || ev.key === "Delete") { ev.preventDefault(); cancellaCifra(); }
+  else if ((ev.key === "Enter" || ev.key === "-") && n) { ev.preventDefault(); applicaEditorLP(-n); }
+  else if (ev.key === "+" && n) { ev.preventDefault(); applicaEditorLP(n); }
+});
+
+// ---------- Menu Strumenti (telefono) ----------
+
+function apriMenuStrumenti() {
+  $("#menu-strumenti").hidden = false;
+  $("#btn-strumenti").setAttribute("aria-expanded", "true");
+}
+
+function chiudiMenuStrumenti() {
+  const menu = $("#menu-strumenti");
+  if (!menu || menu.hidden) return;
+  menu.hidden = true;
+  $("#btn-strumenti").setAttribute("aria-expanded", "false");
+}
+
+$("#btn-strumenti").addEventListener("click", () => {
+  if ($("#menu-strumenti").hidden) apriMenuStrumenti();
+  else chiudiMenuStrumenti();
+});
+
+$("#menu-strumenti").addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-strumento]");
+  if (!b || b.disabled) return;
+  chiudiMenuStrumenti();
+  const s = b.dataset.strumento;
+  if (s === "moneta") tiraMoneta();
+  else if (s === "dado") tiraDado();
+  else if (s === "entrambi") apriEditorLP("entrambi");
+  else if (s === "registro") apriDialogo($("#dialogo-registro"));
+});
+
+// Tocco fuori dal menu (o Esc): si chiude
+document.addEventListener("click", (ev) => {
+  if (!ev.target.closest("#menu-strumenti, #btn-strumenti")) chiudiMenuStrumenti();
+});
+document.addEventListener("keydown", (ev) => {
+  if (ev.key === "Escape") chiudiMenuStrumenti();
+});
 
 // L'animazione viene tolta a fine corsa: se la classe restasse, il browser la
 // rifarebbe ogni volta che il tavolo torna visibile.
@@ -191,6 +335,12 @@ function disegnaTavolo() {
   disegnaCentro();
   disegnaLog();
   disegnaTimer();
+  // Duel finito (o tempo scaduto) con il tastierino aperto: non serve più
+  const editor = $("#dialogo-lp");
+  if (editor.open) {
+    if (partitaInCorso()) disegnaEditorLP();
+    else chiudiDialogo(editor);
+  }
 }
 
 function disegnaBarra() {
@@ -221,6 +371,8 @@ function disegnaGiocatori() {
     const elLP = $("[data-ruolo=lp]", sez);
     elLP.textContent = String(valore);
     elLP.classList.toggle("zero", valore === 0);
+    elLP.classList.toggle("lungo", valore >= 10000);
+    $("[data-ruolo=lp-apri]", sez).setAttribute("aria-label", tr("lp.aria", { nome: nome(g), lp: valore }));
 
     const v = $("[data-ruolo=vittorie]", sez);
     if (necessarie != null) {
@@ -260,8 +412,13 @@ function disegnaCentro() {
   $("#btn-dado").disabled = !inCorso;
   $("#btn-annulla").disabled = partita.finita || duel.eventi.length === 0;
   $$("#form-entrambi input, #form-entrambi button").forEach((el) => { el.disabled = !inCorso; });
+  $$("#menu-strumenti [data-strumento]").forEach((b) => {
+    b.disabled = !inCorso && b.dataset.strumento !== "registro";
+  });
 
   disegnaEsito();
+  // Sul telefono, a duel finito il centro mostra solo l'esito
+  $(".centro").classList.toggle("con-esito", !$("#esito").hidden);
 }
 
 function disegnaEsito() {
@@ -353,15 +510,27 @@ function righeRegistro(eventi, nomi) {
   });
 }
 
+// Cronologia del duel: sotto il tavolo e, sul telefono, nella finestra aperta da "Strumenti"
 function disegnaLog() {
-  const ol = $("#log");
   const eventi = partita.duel.eventi;
-  if (eventi.length === 0) {
-    ol.innerHTML = `<li class="vuoto">${tr("tav.log.vuoto")}</li>`;
-    return;
-  }
   // Sul tavolo il più recente sta in alto
-  ol.innerHTML = righeRegistro(eventi, [nome(0), nome(1)]).reverse().join("");
+  const html = eventi.length === 0
+    ? `<li class="vuoto">${tr("tav.log.vuoto")}</li>`
+    : righeRegistro(eventi, [nome(0), nome(1)]).reverse().join("");
+  $("#log").innerHTML = html;
+  $("#log-finestra").innerHTML = html;
+}
+
+// Il timer sta al centro del tavolo; sul telefono sale nella barra in alto per lasciare spazio
+function posizionaTimer() {
+  const box = $("#timer-box");
+  if (compatto()) {
+    const barra = $(".barra-tavolo");
+    if (box.parentElement !== barra) barra.insertBefore(box, $(".barra-azioni", barra));
+  } else {
+    const centro = $(".centro");
+    if (box.parentElement !== centro) centro.prepend(box);
+  }
 }
 
 function disegnaTimer() {
@@ -372,13 +541,11 @@ function disegnaTimer() {
   if (t.durataMs === null) {
     box.hidden = partita.modalita === "casual";
     el.textContent = tr("tav.senzatempo");
-    el.className = "timer";
-    el.style.fontSize = "2rem";
+    el.className = "timer senza-tempo";
     $("#btn-pausa").hidden = true;
     return;
   }
   box.hidden = false;
-  el.style.fontSize = "";
   $("#btn-pausa").hidden = partita.finita;
   const resto = tempoRimanente(t, Date.now());
   el.textContent = formatTempo(resto);
@@ -482,17 +649,22 @@ $("#setup").addEventListener("submit", (ev) => {
 $("#btn-fase").addEventListener("click", faseSuccessiva);
 $("#btn-annulla").addEventListener("click", annullaConSuono);
 
-$("#btn-moneta").addEventListener("click", () => {
+function tiraMoneta() {
+  if (!partitaInCorso()) return;
   $("#risultato-tiro").textContent = tr("tav.log.moneta", { esito: testoMoneta(lanciaMoneta(partita)) });
   SUONI.moneta();
   aggiorna();
-});
+}
 
-$("#btn-dado").addEventListener("click", () => {
+function tiraDado() {
+  if (!partitaInCorso()) return;
   $("#risultato-tiro").textContent = tr("tav.log.dado", { esito: lanciaDado(partita) });
   SUONI.dado();
   aggiorna();
-});
+}
+
+$("#btn-moneta").addEventListener("click", tiraMoneta);
+$("#btn-dado").addEventListener("click", tiraDado);
 
 $("#form-entrambi").addEventListener("submit", (ev) => {
   ev.preventDefault();
@@ -501,13 +673,7 @@ $("#form-entrambi").addEventListener("submit", (ev) => {
   if (v === null) { input.classList.add("errore"); return; }
   input.classList.remove("errore");
   input.value = "";
-  if (!partitaInCorso()) return;
-  const prima = [lp(partita.duel, 0), lp(partita.duel, 1)];
-  modificaLPEntrambi(partita, v, v);
-  mostraDelta(0, lp(partita.duel, 0) - prima[0]);
-  mostraDelta(1, lp(partita.duel, 1) - prima[1]);
-  suonoLP(v);
-  aggiorna();
+  cambiaLPEntrambi(v);
 });
 
 $("#btn-pausa").addEventListener("click", () => {
@@ -552,3 +718,9 @@ $("#esito").addEventListener("click", (ev) => {
 
 $$(".giocatore").forEach(costruisciGiocatore);
 costruisciFasi();
+posizionaTimer();
+// Girando il telefono il tavolo passa da una versione all'altra
+quandoCambiaSchermo(() => {
+  posizionaTimer();
+  chiudiMenuStrumenti();
+});

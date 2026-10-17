@@ -203,7 +203,6 @@ function avviaSorteggio(nomi) {
 
 function mostraCaricamento(nomi, poi) {
   mostraSoloElemento("caricamento");
-  window.scrollTo(0, 0);
   const ridotto = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   const durata = ridotto ? 1200 : 2600;
 
@@ -582,11 +581,10 @@ function disegnaPannello() {
     risultato = `<p class="nota">${tr(t.concluso ? "pm.chiuso.torneo" : "pm.chiuso.turno")}</p>`;
   }
 
+  $("#pannello-testa").innerHTML = `
+    <span class="label">${esc(etichettaMatch(t, r, i))}</span>
+    <button type="button" class="btn btn-leggero" data-chiudi>${tr("chiudi")}</button>`;
   $("#pannello-corpo").innerHTML = `
-    <div class="pannello-testa">
-      <span class="label">${esc(etichettaMatch(t, r, i))}</span>
-      <button type="button" class="btn btn-leggero" data-pa="chiudi">${tr("chiudi")}</button>
-    </div>
     <h2 class="pannello-titolo"><span>${A}</span><span class="contro">${tr("contro")}</span><span>${B}</span></h2>
     <p class="pannello-stato">${testoStatoMatch(t, m)}</p>
     ${gioca}
@@ -602,8 +600,6 @@ $("#pannello-corpo").addEventListener("click", (ev) => {
   const m = trovato.match;
   const az = b.dataset.pa;
   const ora = Date.now();
-
-  if (az === "chiudi") { chiudiPannello(); return; }
 
   if (az === "gioca") {
     let primo = $("#pm-primo").value;

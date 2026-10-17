@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="description" content="Life point, fasi, timer e tornei per i duel con le carte fisiche.">
 <meta name="theme-color" content="#151a24">
 <link rel="manifest" href="manifest.webmanifest">
@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DuelManager">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}</style>
 <title>DuelManager</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -55,17 +55,31 @@
 }
 
 * { box-sizing: border-box; }
+/* Tocchi da app: niente doppio tocco per ingrandire, niente ritardo sui pulsanti */
+* { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 [hidden] { display: none !important; }
-html, body { min-height: 100%; }
+/* La pagina è ferma come un'app: non si ingrandisce e non si sposta.
+   Scorre solo il riquadro della schermata (o le parti interne) quando serve. */
+html, body {
+  height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
+}
 body {
+  position: fixed; inset: 0;
   background: var(--bg); color: var(--ink);
   font-family: var(--font-body); font-size: 15px; line-height: 1.45;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 16px 24px;
 }
+.schermo {
+  position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto;
+  overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  padding:
+    max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px))
+    max(24px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.con-finestra .schermo { overflow: hidden; }
+.schermo > * { margin-inline: auto; min-width: 0; }
 button, input, select { font: inherit; color: inherit; }
-button { cursor: pointer; }
+button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 :focus-visible { outline: 2px solid var(--p0); outline-offset: 2px; }
 .label {
   font-family: var(--font-num); font-weight: 600; font-size: 0.8rem;
@@ -96,15 +110,16 @@ button { cursor: pointer; }
 .input {
   width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line);
   background: var(--surface-2);
+  font-size: 16px;   /* sotto i 16px l'iPhone ingrandisce la pagina quando si scrive */
 }
 .check { display: flex; align-items: center; gap: 8px; }
 .btn {
   border: 1px solid var(--line); background: var(--surface-2); border-radius: 8px;
   padding: 10px 14px; font-weight: 600;
 }
-.btn:hover { border-color: var(--muted); }
+@media (hover: hover) { .btn:hover { border-color: var(--muted); } }
 .btn-primario { background: var(--ink); color: var(--surface); border-color: var(--ink); }
-.btn-primario:hover { opacity: 0.9; }
+@media (hover: hover) { .btn-primario:hover { opacity: 0.9; } }
 .nota { font-size: 0.85rem; color: var(--muted); }
 
 /* ---------- Barra in alto ---------- */
@@ -139,13 +154,21 @@ button { cursor: pointer; }
 .pip.piena { background: var(--c); }
 .vittorie-num { font-family: var(--font-num); font-weight: 600; color: var(--muted); }
 
-.lp-box { position: relative; text-align: center; padding-block: 6px; }
+/* I life point sono un pulsante: toccandoli si apre il tastierino */
+.lp-box {
+  position: relative; display: block; width: 100%; text-align: center; padding: 6px 0;
+  background: none; border: 1px solid transparent; border-radius: 8px; color: inherit;
+}
+@media (hover: hover) { .lp-box:not(:disabled):hover { background: var(--surface-2); } }
+.lp-box:disabled { cursor: default; }
 .lp {
+  display: block;
   font-family: var(--font-num); font-weight: 700; font-variant-numeric: tabular-nums;
   font-size: clamp(4.5rem, 9vw, 8rem); line-height: 1; letter-spacing: -0.01em;
 }
 .lp.zero { color: var(--danger); }
-.lp-sotto { font-family: var(--font-num); font-weight: 600; letter-spacing: .12em; color: var(--muted); font-size: .85rem; }
+.lp-sotto { display: block; font-family: var(--font-num); font-weight: 600; letter-spacing: .12em; color: var(--muted); font-size: .85rem; }
+.lp-tocca { display: none; }
 .delta {
   position: absolute; right: 8%; top: 0; font-family: var(--font-num); font-weight: 700; font-size: 1.8rem;
   opacity: 0; pointer-events: none;
@@ -181,6 +204,7 @@ button { cursor: pointer; }
 .timer.avviso { color: var(--warn); }
 .timer.scaduto { color: var(--danger); }
 .timer.pausa { opacity: .55; }
+.timer.senza-tempo { font-size: 2rem; }
 .timer-azioni { display: flex; justify-content: center; gap: 8px; }
 .separatore { border: 0; border-top: 1px solid var(--line); margin: 0; }
 
@@ -242,11 +266,11 @@ kbd {
 .btn-grande { padding: 14px; font-size: 1.05rem; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 .btn-leggero { background: transparent; border-color: transparent; color: var(--muted); }
-.btn-leggero:hover { color: var(--ink); border-color: var(--line); }
+@media (hover: hover) { .btn-leggero:hover { color: var(--ink); border-color: var(--line); } }
 .indietro {
   justify-self: start; background: none; border: 0; padding: 2px 0; color: var(--muted); font-weight: 600;
 }
-.indietro:hover { color: var(--ink); }
+@media (hover: hover) { .indietro:hover { color: var(--ink); } }
 .titolo-setup { display: flex; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; }
 .gruppo { border: 0; padding: 0; margin: 0; min-width: 0; }
 .gruppo legend { padding: 0; margin-bottom: 8px; }
@@ -301,7 +325,7 @@ kbd {
 
 /* ---------- Sorteggio ---------- */
 .caricamento {
-  max-width: 560px; margin: 0 auto; width: 100%; min-height: 60vh;
+  max-width: 560px; margin: 0 auto; width: 100%; min-height: 100%;
   display: grid; align-content: center; justify-items: center; gap: 18px; text-align: center;
 }
 .caricamento h1 { font-family: var(--font-num); font-weight: 700; font-size: 2.2rem; margin: 0; }
@@ -368,7 +392,7 @@ kbd {
   text-align: left; background: var(--surface); color: var(--ink);
   border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px;
 }
-button.match:hover { border-color: var(--muted); }
+@media (hover: hover) { button.match:hover { border-color: var(--muted); } }
 .match.da-giocare { border-color: color-mix(in srgb, var(--p0) 55%, var(--line)); }
 .match.in-corso { border-color: var(--warn); }
 .match.automatico { background: var(--surface-2); }
@@ -439,13 +463,36 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 .gradino.p2 { min-height: 118px; }
 .gradino.p3 { min-height: 92px; }
 
-/* ---------- Pannello del match ---------- */
+/* ---------- Finestre (match, regole, impostazioni, cronologia, life point) ----------
+   La finestra resta dentro la zona sicura dello schermo (sotto l'ora e sopra la barra
+   del telefono). Il titolo è fisso in alto; scorre solo il contenuto sotto. */
 .pannello {
-  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--ink);
-  padding: 0; width: min(500px, calc(100% - 32px)); max-height: calc(100% - 32px);
+  --largh: 500px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink);
+  padding: 0; overflow: hidden; overscroll-behavior: contain;
+  inset-block-start: env(safe-area-inset-top, 0px);
+  inset-block-end: env(safe-area-inset-bottom, 0px);
+  inset-inline-start: env(safe-area-inset-left, 0px);
+  inset-inline-end: env(safe-area-inset-right, 0px);
+  width: min(var(--largh), calc(100% - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+  max-width: none;
+  height: -webkit-fit-content; height: fit-content;
+  max-height: calc(100% - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  margin: auto;
 }
+.pannello[open] { display: flex; flex-direction: column; }
+.pannello:focus { outline: none; }
 .pannello::backdrop { background: rgb(8 10 16 / .55); }
-.pannello-corpo { padding: 20px; display: grid; gap: 14px; }
+.pannello.largo { --largh: 680px; }
+.finestra-testa {
+  flex: none; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 14px 20px 12px; border-bottom: 1px solid var(--line); min-width: 0;
+}
+.finestra-corpo {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden;
+  overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  padding: 16px 20px 20px; display: grid; gap: 14px; align-content: start;
+}
 .pannello-testa { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .pannello-titolo {
   margin: 0; font-family: var(--font-num); font-weight: 700; font-size: 1.8rem; line-height: 1.15;
@@ -477,10 +524,8 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   width: 44px; height: 44px; border-radius: 50%; padding: 0; display: grid; place-items: center;
   border: 1px solid var(--line); background: var(--surface); color: var(--ink);
 }
-.icona:hover { border-color: var(--muted); }
+@media (hover: hover) { .icona:hover { border-color: var(--muted); } }
 .icona svg { width: 22px; height: 22px; }
-.pannello { overflow: auto; }
-.pannello.largo { width: min(680px, calc(100% - 32px)); }
 .titolo-dialogo { margin: 0; font-family: var(--font-num); font-weight: 700; font-size: 1.6rem; line-height: 1.1; }
 .regole { display: grid; gap: 16px; }
 .regole section { display: grid; gap: 6px; }
@@ -515,14 +560,14 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: none;
   background: none; border: 1px solid transparent; border-radius: 8px; padding: 8px; color: var(--ink);
 }
-.stella:hover { background: var(--surface-2); }
+@media (hover: hover) { .stella:hover { background: var(--surface-2); } }
 .stella svg { width: 24px; height: 24px; fill: var(--stella-spenta); transition: fill .15s, transform .15s; }
 .stella[aria-pressed="true"] svg { fill: var(--stella); }
 .stella:active svg { transform: scale(.85); }
 .stella.con-testo {
   justify-self: center; padding: 8px 14px; border-color: var(--line); background: var(--surface); font-weight: 600;
 }
-.stella.con-testo:hover { border-color: var(--muted); }
+@media (hover: hover) { .stella.con-testo:hover { border-color: var(--muted); } }
 
 /* ---------- Cronologia e preferiti ---------- */
 .schede { display: inline-grid; grid-auto-flow: column; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
@@ -538,7 +583,7 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 2px;
   border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 4px;
 }
-.voce:hover { border-color: var(--muted); }
+@media (hover: hover) { .voce:hover { border-color: var(--muted); } }
 .voce-apri {
   display: grid; gap: 2px; text-align: left; background: none; border: 0; border-radius: 6px;
   padding: 8px 10px 8px 4px; min-width: 0; color: var(--ink);
@@ -580,6 +625,320 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   padding: 10px 16px; border-radius: 8px; font-weight: 500; box-shadow: 0 6px 24px rgb(0 0 0 / .25);
 }
 
+/* ---------- Pezzi comuni aggiunti per il telefono ---------- */
+.zona-turno { display: grid; gap: 12px; }
+.sg-testa { display: grid; gap: 6px; }
+.fase-nome { text-align: center; }
+.solo-compatto { display: none; }
+.finestra-corpo > .imp-riga:first-child { border-top: 0; padding-top: 0; }
+#log-finestra { max-height: none; }
+.btn, .fasi button, .icona, button.match, .lp-box { transition: transform .08s; }
+.btn:not(:disabled):active, .fasi button:not(:disabled):active, .icona:active, button.match:active { transform: scale(.97); }
+
+/* ---------- Tastierino dei life point ---------- */
+/* Altezza dei tasti: si adatta allo schermo perché tutto il tastierino stia senza scorrere */
+.editor-lp {
+  --largh: 700px;
+  --tasto: clamp(34px, calc((100vh - 124px) / 5), 54px);
+  --tasto: clamp(34px, calc((100dvh - 124px) / 5), 54px);
+}
+.editor-lp[data-g="0"] .titolo-dialogo { color: var(--p0); }
+.editor-lp[data-g="1"] .titolo-dialogo { color: var(--p1); }
+.lp-testa { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; min-width: 0; }
+.lp-testa .titolo-dialogo { overflow-wrap: anywhere; }
+.lp-attuali {
+  font-family: var(--font-num); font-weight: 700; font-size: 1.25rem; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.editor-corpo {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 12px 18px; align-items: start;
+  padding-block: 12px 14px; -webkit-user-select: none; user-select: none;
+}
+.tastierino-box, .rapidi-box { display: grid; gap: 6px; min-width: 0; }
+.lp-schermo { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+.lp-display {
+  display: flex; align-items: center; justify-content: flex-end; height: var(--tasto); padding: 0 14px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); overflow: hidden;
+  font-family: var(--font-num); font-weight: 700; font-size: 2rem; font-variant-numeric: tabular-nums;
+}
+.lp-display.vuoto { color: var(--muted); }
+.tastierino { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.tastierino .btn, .lp-cancella {
+  height: var(--tasto); padding: 0; font-family: var(--font-num); font-size: 1.5rem; font-weight: 700;
+}
+.lp-cancella { width: calc(var(--tasto) * 1.5); display: grid; place-items: center; }
+.lp-cancella svg { width: 26px; height: 26px; }
+.lp-applica { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.lp-applica .btn {
+  min-height: var(--tasto); padding: 4px 8px; display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: center; gap: 0 6px; line-height: 1.1;
+  font-family: var(--font-num); font-size: 1.25rem; font-weight: 700;
+}
+.lp-applica .anteprima { font-size: .95rem; font-weight: 600; opacity: .85; font-variant-numeric: tabular-nums; }
+.btn-togli { background: var(--danger); border-color: var(--danger); color: var(--surface); }
+.btn-aggiungi { background: var(--ok); border-color: var(--ok); color: var(--surface); }
+@media (hover: hover) { .btn-togli:hover, .btn-aggiungi:hover { border-color: transparent; opacity: .92; } }
+.rapidi-box .rapidi { gap: 6px; }
+.rapidi-box .rapidi .btn { height: var(--tasto); padding: 0 2px; }
+@media (max-width: 560px) { .editor-corpo { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Menu Strumenti (sul telefono, al centro del tavolo) ---------- */
+.strumenti { position: relative; }
+.menu-strumenti {
+  position: absolute; left: 0; right: 0; bottom: calc(100% + 6px); z-index: 5;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / .28);
+}
+.menu-strumenti .btn { padding: 11px 6px; }
+
+/* ---------- "Gira il telefono" ---------- */
+.ruota {
+  display: none; position: fixed; inset: 0; z-index: 25; background: var(--bg);
+  padding: max(24px, env(safe-area-inset-top, 0px)) 24px max(24px, env(safe-area-inset-bottom, 0px));
+  align-content: center; justify-items: center; gap: 14px; text-align: center;
+}
+.ruota svg { width: 88px; height: 88px; animation: gira 2.6s ease-in-out infinite; }
+.ruota h2 { margin: 0; font-family: var(--font-num); font-weight: 700; font-size: 2rem; line-height: 1.1; }
+.ruota p { margin: 0; color: var(--muted); max-width: 32ch; }
+@keyframes gira { 0%, 20% { transform: rotate(0); } 45%, 80% { transform: rotate(-90deg); } 100% { transform: rotate(0); } }
+@media (max-width: 600px) and (orientation: portrait) {
+  :root:not(.verticale-ok)[data-schermata="tavolo"] .ruota,
+  :root:not(.verticale-ok)[data-schermata="setup-giocatori"] .ruota,
+  :root:not(.verticale-ok)[data-schermata="tabellone"] .ruota { display: grid; }
+}
+
+/* =============================================================
+   TELEFONO — Home e finestre (verticale e orizzontale)
+   ============================================================= */
+@media (max-width: 600px), (max-height: 540px) and (orientation: landscape) {
+  .home { gap: 14px; padding-block: 0; }
+  .home-testa p { display: none; }
+  .home-testa h1 { font-size: 2.4rem; }
+  .icona { width: 42px; height: 42px; }
+  .scelte { gap: 12px; }
+  .scelta-grande { padding: 14px 16px 16px; gap: 12px; grid-template-rows: auto 1fr; }
+  .scelta-corpo { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; }
+  .scelta-corpo p { display: none; }
+  .scelta-grande h2 { font-size: 2.1rem; }
+  .scelta-azioni { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-content: end; }
+  .scelta-azioni > .in-corso-info, .scelta-azioni > .btn-grande { grid-column: 1 / -1; }
+  .in-corso-info { padding: 8px 12px; }
+  .scelta-azioni .btn { padding: 11px 8px; }
+
+  .finestra-testa { padding: 10px 12px 10px 16px; }
+  .finestra-corpo { padding: 14px 16px 16px; }
+  .editor-corpo { padding-block: 10px 12px; }
+  .titolo-dialogo { font-size: 1.35rem; }
+  .pannello-titolo { font-size: 1.45rem; }
+}
+
+/* =============================================================
+   TELEFONO — tavolo del duello (verticale e orizzontale)
+   Tutto in una schermata: i life point si cambiano dal tastierino,
+   moneta, dado e cronologia stanno in "Strumenti".
+   ============================================================= */
+@media (max-width: 600px) and (orientation: portrait), (max-height: 540px) and (orientation: landscape) {
+  .tavolo { height: 100%; grid-template-rows: auto minmax(0, 1fr); gap: 8px; -webkit-user-select: none; user-select: none; }
+  .tavolo > .cronologia { display: none; }
+  .tavolo .solo-compatto { display: block; }
+  .tavolo .solo-desktop { display: none; }
+
+  .barra-tavolo { flex-wrap: nowrap; gap: 6px 12px; }
+  .barra-tavolo .barra-info { flex: 1 1 auto; flex-wrap: nowrap; min-width: 0; overflow: hidden; gap: 4px 10px; }
+  .barra-tavolo .barra-info > * { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .barra-tavolo .titolo { font-size: 1.15rem; flex: 0 1 auto; }
+  .barra-tavolo .barra-azioni { flex: none; flex-wrap: nowrap; gap: 6px; }
+  .barra-tavolo .btn { padding: 7px 10px; }
+  .barra-tavolo .timer-box { display: flex; align-items: center; gap: 8px; flex: none; }
+  .barra-tavolo .timer-box > .label { display: none; }
+  .barra-tavolo .timer { font-size: 1.7rem; }
+  .barra-tavolo .timer.senza-tempo { font-size: 1rem; color: var(--muted); }
+  .barra-tavolo .timer-azioni .btn { padding: 6px 10px; }
+
+  .campo { height: 100%; min-height: 0; gap: 8px; }
+  .giocatore {
+    padding: 10px 12px; gap: 6px; container-type: inline-size;
+    grid-template-rows: auto auto minmax(0, 1fr); align-content: stretch;
+  }
+  .giocatore .form-lp, .giocatore .rapidi, .giocatore .msg-errore { display: none; }
+  .testa-g { min-height: 24px; }
+  .nome { font-size: 1.25rem; line-height: 1.15; }
+  .badge-turno { font-size: .72rem; padding: 2px 7px; }
+  .pip { width: 12px; height: 12px; }
+  .lp-box {
+    display: grid; place-content: center; gap: 2px; min-height: 0;
+    background: var(--surface-2); border-color: var(--line);
+  }
+  .lp-box:not(:disabled):active { border-color: var(--c); background: color-mix(in srgb, var(--c) 12%, var(--surface-2)); }
+  .lp { font-size: 4rem; font-size: clamp(2.8rem, 44cqi, 7rem); }
+  .lp.lungo { font-size: 3.4rem; font-size: clamp(2.4rem, 34cqi, 5.6rem); }   /* 10000 e oltre */
+  .lp-tocca { display: block; font-size: .78rem; color: var(--muted); }
+  .lp-box:disabled .lp-tocca { visibility: hidden; }
+  .delta { font-size: 1.4rem; right: 8px; top: 4px; }
+
+  .centro { padding: 10px; gap: 8px; align-content: center; overflow-y: auto; overscroll-behavior: contain; }
+  .zona-turno { gap: 8px; }
+  .turno { display: flex; justify-content: center; align-items: baseline; flex-wrap: wrap; gap: 0 8px; }
+  .turno-chi { font-size: 1.1rem; }
+  .fase-nome { font-size: 1.5rem; }
+  .fasi button { padding: 8px 0; font-size: .9rem; }
+  .btn-fase { padding: 11px; font-size: 1.2rem; }
+  .nota-turno { font-size: .76rem; line-height: 1.3; min-height: 0; }
+  .nota-turno:empty { display: none; }
+  .separatore, .entrambi, .tasti { display: none; }
+  .strumenti { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .strumenti .btn { padding: 10px 6px; }
+  .risultato-tiro { font-size: 1.05rem; min-height: 0; }
+  .risultato-tiro:empty { display: none; }
+  .centro.con-esito .strumenti, .centro.con-esito .risultato-tiro { display: none; }
+  .esito { padding: 10px; gap: 8px; }
+  .esito h2 { font-size: 1.35rem; }
+  .esito .azioni { gap: 6px; }
+  .esito .btn { padding: 9px 10px; }
+  .esito .stella.con-testo { padding: 6px 12px; }
+}
+
+/* Telefono in verticale (se si sceglie di non girarlo): i due giocatori in alto, il centro sotto */
+@media (max-width: 600px) and (orientation: portrait) {
+  .barra-tavolo { flex-wrap: wrap; }
+  .barra-tavolo .barra-info { flex-basis: 0; }
+  .barra-tavolo .precedenti { display: none; }
+  .barra-tavolo .timer-box { order: 3; width: 100%; justify-content: center; }
+  .barra-tavolo .timer { font-size: 2rem; }
+  .campo { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .campo > .giocatore[data-g="0"] { grid-area: 1 / 1; }
+  .campo > .giocatore[data-g="1"] { grid-area: 1 / 2; }
+  .campo > .centro { grid-area: 2 / 1 / 3 / 3; }
+}
+
+/* =============================================================
+   TELEFONO IN ORIZZONTALE — tavolo, giocatori del torneo, tabellone
+   ============================================================= */
+@media (max-height: 540px) and (orientation: landscape) {
+  .schermo {
+    padding:
+      max(8px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px))
+      max(8px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+  }
+
+  /* Tavolo: giocatore · centro · giocatore */
+  .campo { grid-template-columns: minmax(0, 1fr) minmax(250px, 1.15fr) minmax(0, 1fr); }
+  .lp { font-size: clamp(2.8rem, min(44cqi, 27dvh), 7rem); }
+  .lp.lungo { font-size: clamp(2.4rem, min(34cqi, 22dvh), 5.6rem); }
+  .editor-lp .finestra-testa { padding-block: 8px; }
+
+  /* Home: titolo e icone sulla stessa riga */
+  .home-testa { flex-direction: row; align-items: center; }
+  .home-testa h1 { font-size: 2.1rem; }
+
+  /* Finestra del match: nomi e stato su una riga, le due sezioni affiancate */
+  #pannello-match { --largh: 760px; }
+  #pannello-match .finestra-corpo { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 20px; padding-top: 12px; }
+  #pannello-match .finestra-corpo > .nota,
+  #pannello-match .pannello-sezione:only-of-type { grid-column: 1 / -1; }
+  #pannello-match .pannello-titolo { font-size: 1.35rem; align-self: center; }
+  #pannello-match .pannello-stato { align-self: center; text-align: right; font-size: .9rem; }
+  #pannello-match .pannello-sezione { gap: 8px; padding-top: 10px; align-content: start; }
+  #pannello-match .campo-form { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; }
+  #pannello-match .input { padding-block: 8px; }
+  #pannello-match .btn-grande { padding: 11px; }
+
+  /* Giocatori del torneo: tutti i nomi su 4 colonne, "Crea" sempre in vista */
+  #setup-giocatori {
+    max-width: none; height: 100%; padding: 10px 14px; gap: 6px 14px; align-content: stretch;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "indietro titolo contatore crea"
+      "riepilogo riepilogo info info"
+      "nomi nomi nomi nomi"
+      "errore errore nota nota";
+  }
+  #setup-giocatori > .sg-testa, #setup-giocatori > .sg-numero, #setup-giocatori > .sg-nomi { display: contents; }
+  #setup-giocatori .indietro { grid-area: indietro; align-self: center; }
+  #setup-giocatori .titolo-setup { grid-area: titolo; align-self: center; min-width: 0; gap: 0 10px; }
+  #setup-giocatori h1 { font-size: 1.6rem; }
+  #riepilogo-torneo { grid-area: riepilogo; align-self: center; font-size: .85rem; }
+  #etichetta-num, #setup-giocatori .sg-nomi > .label { display: none; }
+  #setup-giocatori .contatore { grid-area: contatore; align-self: center; }
+  #setup-giocatori .contatore button { width: 40px; height: 40px; }
+  #setup-giocatori .contatore output { min-width: 48px; font-size: 1.5rem; }
+  #info-giocatori { grid-area: info; align-self: center; text-align: right; font-size: .8rem; }
+  #griglia-nomi {
+    grid-area: nomi; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px 12px;
+    align-content: start; min-height: 0; overflow-y: auto; overscroll-behavior: contain; columns: auto; padding: 2px;
+  }
+  #griglia-nomi li { margin: 0; grid-template-columns: 20px minmax(0, 1fr); gap: 6px; }
+  #griglia-nomi .input { padding: 7px 10px; }
+  #errore-nomi { grid-area: errore; margin: 0; min-height: 0; }
+  #nota-sostituisci-torneo { grid-area: nota; align-self: center; text-align: right; font-size: .8rem; }
+  #setup-giocatori .sg-crea { grid-area: crea; align-self: center; padding: 10px 16px; }
+
+  /* Tabellone: una riga in alto con turno e "Prosegui", sotto il tabellone che scorre */
+  #tabellone {
+    height: 100%; gap: 8px 12px;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "titolo avanz azione azioni"
+      "banner banner banner banner"
+      "vista vista vista vista";
+  }
+  #tabellone > .barra, #avanzamento, #avanzamento > .avanzamento { display: contents; }
+  #tabellone .barra-info { grid-area: titolo; align-self: center; }
+  #info-torneo { display: none; }
+  #tabellone .barra-azioni { grid-area: azioni; align-self: center; flex-wrap: nowrap; gap: 6px; }
+  #tabellone .barra-azioni .btn { padding: 7px 10px; }
+  .avanz-info { grid-area: avanz; align-self: center; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; }
+  .avanz-info > .label, .avanz-azione .nota { display: none; }
+  .avanz-info strong { font-size: 1.3rem; }
+  .avanz-conta { font-size: .85rem; }
+  .avanz-azione { grid-area: azione; align-self: center; }
+  .btn-prosegui { padding: 7px 14px; font-size: 1.05rem; }
+  #vista-torneo { grid-area: vista; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  #vista-torneo > * + * { margin-top: 10px; }
+
+  .bracket-scroll { height: 100%; overflow: auto; overscroll-behavior: contain; padding: 8px 12px 10px; }
+  .bracket {
+    column-gap: 32px; grid-template-columns: repeat(var(--colonne), minmax(156px, 1fr));
+    min-width: calc(var(--colonne) * 156px + (var(--colonne) - 1) * 32px);
+  }
+  .colonna { gap: 6px; }
+  .colonna-testa { height: 18px; }
+  .colonna-corpo { min-height: calc(var(--righe) * 64px); }
+  .colonna:not(:last-child) .slot::after, .colonna:not(:first-child) .slot::before { width: 16px; }
+  .colonna:not(:last-child) .coppia::after { right: -16px; }
+  .match { height: 58px; padding: 4px 10px; gap: 0; }
+  .match .riga { font-size: .9rem; line-height: 1.25; }
+  .match .riga .pt { font-size: .95rem; }
+  .match .st { margin-top: 2px; font-size: .7rem; }
+
+  .vista-punti { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 10px; }
+  .blocco { padding: 10px 14px; gap: 8px; }
+  .blocco h2 { font-size: 1.1rem; }
+  .griglia-match { grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); gap: 8px; }
+  .classifica th { padding: 4px 6px; }
+  .classifica td { padding: 5px 6px; }
+
+  #avanzamento > .finale-torneo {
+    grid-area: banner; display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+    gap: 4px 14px; padding: 8px 14px;
+  }
+  .nome-campione { font-size: 1.7rem; }
+  .finale-torneo p { font-size: .85rem; }
+  .finale-torneo .podio { width: auto; max-width: none; display: flex; align-items: stretch; gap: 6px; }
+  .finale-torneo .gradino,
+  .finale-torneo .gradino.p1, .finale-torneo .gradino.p2, .finale-torneo .gradino.p3 {
+    min-height: 0; display: flex; align-items: baseline; gap: 6px; padding: 4px 10px;
+    border-bottom: 1px solid var(--line); border-radius: 8px;
+  }
+  .finale-torneo .gradino.p1 { order: -1; border-color: var(--oro); }
+  .finale-torneo .gradino .pos { font-size: 1.1rem; }
+  .finale-torneo .gradino strong { font-size: 1rem; }
+  .finale-torneo .stella.con-testo, .finale-torneo .btn { padding: 6px 12px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .delta.mostra { opacity: 1; }
@@ -588,7 +947,7 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 
 </head>
 <body>
-<div class="wrap">
+<div class="schermo" id="schermo">
 
   <!-- ================= HOME ================= -->
   <section id="home" class="home" hidden>
@@ -763,12 +1122,12 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   <!-- ================= SETUP TORNEO: passo 2 ================= -->
   <form id="setup-giocatori" class="setup setup-largo" novalidate hidden>
     <button type="button" class="indietro" data-vai="setup-torneo" data-t="sg.indietro">← Tipo e formato</button>
-    <div style="display:grid; gap:6px">
+    <div class="sg-testa">
       <div class="titolo-setup"><h1 data-t="sg.titolo">Giocatori</h1><span class="label" data-t="sg.passo2">Nuovo torneo · passo 2 di 2</span></div>
       <p id="riepilogo-torneo"></p>
     </div>
 
-    <div class="campo-form">
+    <div class="campo-form sg-numero">
       <span class="label" id="etichetta-num" data-t="sg.numero">Numero di giocatori</span>
       <div class="contatore" role="group" aria-labelledby="etichetta-num">
         <button type="button" id="meno-g" data-t-aria="sg.meno" aria-label="Un giocatore in meno">−</button>
@@ -778,14 +1137,14 @@ details.giocati[open] > summary { margin-bottom: 4px; }
       <p class="nota" id="info-giocatori"></p>
     </div>
 
-    <div class="campo-form">
+    <div class="campo-form sg-nomi">
       <span class="label" data-t="sg.nomi">Nomi</span>
       <ol class="griglia-nomi" id="griglia-nomi"></ol>
       <p class="msg-errore" id="errore-nomi" aria-live="polite"></p>
     </div>
 
     <p class="nota" id="nota-sostituisci-torneo" hidden data-t="sg.sostituisci">Creando il nuovo torneo, quello in corso verrà chiuso.</p>
-    <button type="submit" class="btn btn-primario btn-grande" data-t="sg.crea">Crea il torneo</button>
+    <button type="submit" class="btn btn-primario btn-grande sg-crea" data-t="sg.crea">Crea il torneo</button>
   </form>
 
   <!-- ================= SORTEGGIO ================= -->
@@ -814,8 +1173,8 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   </section>
 
   <!-- ================= TAVOLO ================= -->
-  <div id="tavolo" class="wrap" hidden>
-    <div class="barra">
+  <div id="tavolo" class="wrap tavolo" hidden>
+    <div class="barra barra-tavolo">
       <div class="barra-info">
         <span class="titolo" id="info-modalita">Standard</span>
         <span class="label" id="info-duel">Duel 1</span>
@@ -841,12 +1200,12 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 
         <div id="esito" class="esito" hidden></div>
 
-        <div id="zona-turno" style="display:grid; gap:12px">
+        <div id="zona-turno" class="zona-turno">
           <div class="turno">
             <span class="label" id="turno-num">Turno 1</span>
             <span class="turno-chi" id="turno-chi"></span>
           </div>
-          <div class="fase-nome" id="fase-nome" style="text-align:center">Draw Phase</div>
+          <div class="fase-nome" id="fase-nome">Draw Phase</div>
           <div class="fasi" id="fasi" role="group" data-t-aria="tav.aria.fasi" aria-label="Vai a una fase"></div>
           <button type="button" class="btn btn-primario btn-fase" id="btn-fase">Fase successiva</button>
           <p class="nota-turno" id="nota-turno"></p>
@@ -855,8 +1214,16 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 
         <div class="strumenti">
           <button type="button" class="btn" id="btn-annulla" data-t="tav.annulla">Annulla</button>
-          <button type="button" class="btn" id="btn-moneta" data-t="tav.moneta">Moneta</button>
-          <button type="button" class="btn" id="btn-dado" data-t="tav.dado">Dado</button>
+          <button type="button" class="btn solo-desktop" id="btn-moneta" data-t="tav.moneta">Moneta</button>
+          <button type="button" class="btn solo-desktop" id="btn-dado" data-t="tav.dado">Dado</button>
+          <!-- Sul telefono moneta, dado, danno a entrambi e cronologia stanno in questo menu -->
+          <button type="button" class="btn solo-compatto" id="btn-strumenti" aria-haspopup="true" aria-expanded="false" aria-controls="menu-strumenti"><span data-t="tav.strumenti">Strumenti</span> ▾</button>
+          <div class="menu-strumenti" id="menu-strumenti" role="menu" hidden>
+            <button type="button" class="btn" role="menuitem" data-strumento="moneta" data-t="tav.moneta">Moneta</button>
+            <button type="button" class="btn" role="menuitem" data-strumento="dado" data-t="tav.dado">Dado</button>
+            <button type="button" class="btn" role="menuitem" data-strumento="entrambi" data-t="tav.entrambi">Danno a entrambi</button>
+            <button type="button" class="btn" role="menuitem" data-strumento="registro" data-t="tav.cronologia.breve">Cronologia</button>
+          </div>
         </div>
         <p class="risultato-tiro" id="risultato-tiro" aria-live="polite"></p>
         <form class="entrambi" id="form-entrambi" novalidate>
@@ -880,26 +1247,26 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 </div>
 
 <!-- ================= FINESTRE ================= -->
+<!-- Ogni finestra: titolo fisso in alto (finestra-testa) e contenuto che scorre (finestra-corpo) -->
 <dialog id="pannello-match" class="pannello" data-t-aria="pm.aria" aria-label="Match del torneo">
-  <div id="pannello-corpo" class="pannello-corpo"></div>
+  <div class="finestra-testa" id="pannello-testa"></div>
+  <div class="finestra-corpo" id="pannello-corpo"></div>
 </dialog>
 
 <dialog id="dialogo-regole" class="pannello largo" aria-labelledby="titolo-regole">
-  <div class="pannello-corpo">
-    <div class="pannello-testa">
-      <h2 class="titolo-dialogo" id="titolo-regole" data-t="regole.titolo">Regole e funzionamento</h2>
-      <button type="button" class="btn btn-leggero" data-chiudi data-t="chiudi">Chiudi</button>
-    </div>
-    <div class="regole" id="regole-corpo"></div>
+  <div class="finestra-testa">
+    <h2 class="titolo-dialogo" id="titolo-regole" data-t="regole.titolo">Regole e funzionamento</h2>
+    <button type="button" class="btn btn-leggero" data-chiudi data-t="chiudi">Chiudi</button>
   </div>
+  <div class="finestra-corpo regole" id="regole-corpo"></div>
 </dialog>
 
 <dialog id="dialogo-impostazioni" class="pannello" aria-labelledby="titolo-impostazioni">
-  <div class="pannello-corpo">
-    <div class="pannello-testa">
-      <h2 class="titolo-dialogo" id="titolo-impostazioni" data-t="imp.titolo">Impostazioni</h2>
-      <button type="button" class="btn btn-leggero" data-chiudi data-t="chiudi">Chiudi</button>
-    </div>
+  <div class="finestra-testa">
+    <h2 class="titolo-dialogo" id="titolo-impostazioni" data-t="imp.titolo">Impostazioni</h2>
+    <button type="button" class="btn btn-leggero" data-chiudi data-t="chiudi">Chiudi</button>
+  </div>
+  <div class="finestra-corpo">
     <div class="imp-riga">
       <div>
         <strong id="etichetta-suono" data-t="imp.suono">Suono</strong>
@@ -921,30 +1288,107 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 </dialog>
 
 <dialog id="dialogo-cronologia" class="pannello largo" data-t-aria="cr.aria" aria-label="Cronologia e preferiti">
-  <div class="pannello-corpo">
-    <div class="pannello-testa">
-      <div class="schede" role="tablist">
-        <button type="button" role="tab" data-scheda="cronologia" data-t="cr.titolo" aria-selected="true">Cronologia</button>
-        <button type="button" role="tab" data-scheda="preferiti" data-t="pref.titolo" aria-selected="false">Preferiti</button>
-      </div>
-      <button type="button" class="btn btn-leggero" data-chiudi data-t="chiudi">Chiudi</button>
+  <div class="finestra-testa">
+    <div class="schede" role="tablist">
+      <button type="button" role="tab" data-scheda="cronologia" data-t="cr.titolo" aria-selected="true">Cronologia</button>
+      <button type="button" role="tab" data-scheda="preferiti" data-t="pref.titolo" aria-selected="false">Preferiti</button>
     </div>
-    <div id="cronologia-corpo" class="cronologia-corpo" role="tabpanel"></div>
+    <button type="button" class="btn btn-leggero" data-chiudi data-t="chiudi">Chiudi</button>
+  </div>
+  <div id="cronologia-corpo" class="finestra-corpo cronologia-corpo" role="tabpanel"></div>
+</dialog>
+
+<!-- Tastierino dei life point: si apre toccando i life point di un giocatore -->
+<dialog id="dialogo-lp" class="pannello editor-lp" aria-labelledby="lp-titolo">
+  <div class="finestra-testa">
+    <div class="lp-testa">
+      <h2 class="titolo-dialogo" id="lp-titolo">Giocatore 1</h2>
+      <span class="lp-attuali" id="lp-attuali">8000</span>
+    </div>
+    <button type="button" class="btn btn-leggero" data-chiudi data-t="chiudi">Chiudi</button>
+  </div>
+  <div class="finestra-corpo editor-corpo">
+    <div class="tastierino-box">
+      <div class="lp-schermo">
+        <output class="lp-display vuoto" id="lp-display" aria-live="polite">0</output>
+        <button type="button" class="btn lp-cancella" data-cancella data-t-aria="lp.cancella" aria-label="Cancella una cifra">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path>
+            <line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="tastierino">
+        <button type="button" class="btn" data-cifra="1">1</button>
+        <button type="button" class="btn" data-cifra="2">2</button>
+        <button type="button" class="btn" data-cifra="3">3</button>
+        <button type="button" class="btn" data-cifra="00">00</button>
+        <button type="button" class="btn" data-cifra="4">4</button>
+        <button type="button" class="btn" data-cifra="5">5</button>
+        <button type="button" class="btn" data-cifra="6">6</button>
+        <button type="button" class="btn" data-cifra="000">000</button>
+        <button type="button" class="btn" data-cifra="7">7</button>
+        <button type="button" class="btn" data-cifra="8">8</button>
+        <button type="button" class="btn" data-cifra="9">9</button>
+        <button type="button" class="btn" data-cifra="0">0</button>
+      </div>
+      <div class="lp-applica">
+        <button type="button" class="btn btn-togli" id="lp-togli"><span>− <span data-t="lp.togli">Togli</span></span><span class="anteprima"></span></button>
+        <button type="button" class="btn btn-aggiungi" id="lp-aggiungi"><span>+ <span data-t="lp.aggiungi">Aggiungi</span></span><span class="anteprima"></span></button>
+      </div>
+    </div>
+    <div class="rapidi-box">
+      <span class="label" data-t="lp.rapidi">Tasti rapidi</span>
+      <div class="rapidi">
+        <button type="button" class="btn" data-delta="-50">−50</button>
+        <button type="button" class="btn" data-delta="-100">−100</button>
+        <button type="button" class="btn" data-delta="-500">−500</button>
+        <button type="button" class="btn" data-delta="-1000">−1000</button>
+        <button type="button" class="btn piu" data-delta="50">+50</button>
+        <button type="button" class="btn piu" data-delta="100">+100</button>
+        <button type="button" class="btn piu" data-delta="500">+500</button>
+        <button type="button" class="btn piu" data-delta="1000">+1000</button>
+        <button type="button" class="btn meta" id="lp-meta" data-t="tav.meta">Metà</button>
+      </div>
+    </div>
   </div>
 </dialog>
 
+<!-- Cronologia del duel in corso (sul telefono, da "Strumenti") -->
+<dialog id="dialogo-registro" class="pannello largo" aria-labelledby="titolo-registro">
+  <div class="finestra-testa">
+    <h2 class="titolo-dialogo" id="titolo-registro" data-t="tav.cronologia">Cronologia del duel</h2>
+    <button type="button" class="btn btn-leggero" data-chiudi data-t="chiudi">Chiudi</button>
+  </div>
+  <div class="finestra-corpo">
+    <span class="label" data-t="tav.recente">Più recente in alto</span>
+    <ol class="log" id="log-finestra"></ol>
+  </div>
+</dialog>
+
+<!-- Telefono in verticale su tavolo, giocatori del torneo e tabellone -->
+<div class="ruota" id="ruota" role="alert">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="6" y="2" width="12" height="20" rx="2.5"></rect>
+    <line x1="11" y1="18.5" x2="13" y2="18.5"></line>
+  </svg>
+  <h2 data-t="ruota.titolo">Gira il telefono</h2>
+  <p data-t="ruota.testo">Questa schermata è fatta per il telefono in orizzontale: così si vede tutto senza scorrere.</p>
+  <button type="button" class="btn" id="ruota-continua" data-t="ruota.continua">Continua in verticale</button>
+</div>
+
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="partita.js?v=202610161627"></script>
-<script src="torneo.js?v=202610161627"></script>
-<script src="cronologia.js?v=202610161627"></script>
-<script src="base.js?v=202610161627"></script>
-<script src="lingua.js?v=202610161627"></script>
-<script src="duello.js?v=202610161627"></script>
-<script src="torneo-ui.js?v=202610161627"></script>
-<script src="cronologia-ui.js?v=202610161627"></script>
-<script src="app.js?v=202610161627"></script>
+<script src="partita.js?v=202610171105"></script>
+<script src="torneo.js?v=202610171105"></script>
+<script src="cronologia.js?v=202610171105"></script>
+<script src="base.js?v=202610171105"></script>
+<script src="lingua.js?v=202610171105"></script>
+<script src="duello.js?v=202610171105"></script>
+<script src="torneo-ui.js?v=202610171105"></script>
+<script src="cronologia-ui.js?v=202610171105"></script>
+<script src="app.js?v=202610171105"></script>
 
-<script src="pwa.js?v=202610161627"></script>
+<script src="pwa.js?v=202610171105"></script>
 </body>
 </html>

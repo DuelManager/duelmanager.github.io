@@ -13,34 +13,79 @@ const SCHERMATE = {
   "tavolo": "#tavolo",
 };
 
+// Schermate pensate per il telefono in orizzontale
+const SCHERMATE_ORIZZONTALI = ["tavolo", "setup-giocatori", "caricamento", "tabellone"];
+
 function mostraSoloElemento(nomeSchermata) {
   for (const [k, sel] of Object.entries(SCHERMATE)) $(sel).hidden = k !== nomeSchermata;
+  document.documentElement.dataset.schermata = nomeSchermata;   // serve al CSS ("Gira il telefono")
+  $("#schermo").scrollTop = 0;
+  window.scrollTo(0, 0);
 }
 
-// ---------- Finestre (regole, impostazioni, pannello del match) ----------
+// ---------- Finestre (regole, impostazioni, pannello del match, life point) ----------
+// Con una finestra aperta la pagina sotto non si tocca e non scorre: scorre solo la finestra.
+
+function aggiornaBloccoPagina() {
+  document.documentElement.classList.toggle("con-finestra", $$("dialog").some((d) => d.open));
+}
 
 function apriDialogo(d) {
   if (d.open) return;
   if (typeof d.showModal === "function") d.showModal();
   else d.setAttribute("open", "");
+  // L'attenzione va alla finestra, non al suo primo pulsante (che si vedrebbe evidenziato)
+  d.tabIndex = -1;
+  d.focus({ preventScroll: true });
+  const corpo = $(".finestra-corpo", d);
+  if (corpo) corpo.scrollTop = 0;
+  aggiornaBloccoPagina();
 }
 
 function chiudiDialogo(d) {
   if (!d.open) return;
   if (typeof d.close === "function") d.close();
   else d.removeAttribute("open");
+  aggiornaBloccoPagina();
 }
 
 function chiudiTutteLeFinestre() {
   $$("dialog").forEach(chiudiDialogo);
+  chiudiMenuStrumenti();
   pannelloId = null;
 }
 
 $$("dialog").forEach((d) => {
-  // Clic sullo sfondo scuro: chiude la finestra
+  // Tocco sullo sfondo scuro: chiude la finestra
   d.addEventListener("click", (ev) => {
     if (ev.target === d) chiudiDialogo(d);
   });
+  // Chiusa anche con Esc o dal browser
+  d.addEventListener("close", aggiornaBloccoPagina);
+});
+
+// ---------- Orientamento ----------
+// Su Android (app installata) il tavolo e il torneo si girano da soli in orizzontale.
+// Sull'iPhone non si può: in verticale compare l'invito a girare il telefono.
+
+function telefonoTouch() {
+  return window.matchMedia("(pointer: coarse)").matches && Math.min(screen.width, screen.height) <= 600;
+}
+
+function orientaSchermo(s) {
+  try {
+    const o = screen.orientation;
+    if (!o || !telefonoTouch()) return;
+    if (SCHERMATE_ORIZZONTALI.includes(s)) {
+      if (o.lock) o.lock("landscape").catch(() => {});
+    } else if (o.unlock) {
+      o.unlock();
+    }
+  } catch (e) { /* non supportato: nessun problema */ }
+}
+
+$("#ruota-continua").addEventListener("click", () => {
+  document.documentElement.classList.add("verticale-ok");
 });
 document.addEventListener("click", (ev) => {
   const b = ev.target.closest("[data-chiudi]");
@@ -64,8 +109,8 @@ function vai(s) {
     azzeraDelta();
     tieniSchermoAcceso();
   }
+  orientaSchermo(s);
   salva();
-  window.scrollTo(0, 0);
 }
 
 // Ridisegna la schermata aperta (dopo un cambio di lingua o di dati)
@@ -258,10 +303,13 @@ document.addEventListener("keydown", (ev) => {
   } else if (k === "p" && partita.timer.durataMs !== null && !partita.finita) {
     $("#btn-pausa").click();
   } else if (k === "1" || k === "2") {
-    const input = $(`#input-lp-${Number(k) - 1}`);
+    const g = Number(k) - 1;
+    const input = $(`#input-lp-${g}`);
     if (!input.disabled) {
       ev.preventDefault();
-      input.focus();
+      // Sul telefono (o finestra stretta) il campo è nascosto: si apre il tastierino
+      if (compatto()) apriEditorLP(g);
+      else input.focus();
     }
   }
 });
