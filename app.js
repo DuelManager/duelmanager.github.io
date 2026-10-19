@@ -165,7 +165,7 @@ function disegnaHome() {
   if (t) {
     let dettaglio;
     if (t.concluso) {
-      if (t.formato === "eliminazione") {
+      if (t.formato === "eliminazione" || t.formato === "svizzero") {
         dettaglio = t.campione !== null
           ? tr("home.campione", { nome: esc(nomeGiocatore(t, t.campione)) })
           : tr("home.senzavincitore");
@@ -176,9 +176,7 @@ function disegnaHome() {
       const turno = t.turni[t.turnoCorrente];
       const reali = turno.partite.filter(matchReale);
       const fatte = reali.filter((m) => m.stato === "conclusa").length;
-      const nomeT = t.formato === "punti"
-        ? tr("tab.turnodi", { n: t.turnoCorrente + 1, tot: t.numeroTurni })
-        : nomeTurno(t, t.turnoCorrente);
+      const nomeT = titoloTurno(t, t.turnoCorrente);
       dettaglio = tr("home.concluse", { turno: esc(nomeT), fatte, tot: reali.length });
     }
     $("#azioni-torneo").innerHTML = `

@@ -38,8 +38,8 @@ const TESTI = {
     "home.duello.desc": "Due giocatori, 8000 life point a testa. Cronologia, fasi del turno e timer da match.",
     "home.duello.tipi": "Standard · Casual",
     "home.torneo": "Torneo",
-    "home.torneo.desc": "Da 4 a 16 giocatori. Abbinamenti sorteggiati, tabellone e risultati salvati match per match.",
-    "home.torneo.tipi": "Eliminazione diretta · A punti",
+    "home.torneo.desc": "Da 4 a 32 giocatori. Abbinamenti sorteggiati, tabellone e risultati salvati match per match.",
+    "home.torneo.tipi": "Eliminazione · Svizzero · Tutti contro tutti",
     "home.nuovo.duello": "Nuovo duello",
     "home.nuovo.torneo": "Nuovo torneo",
     "home.duello.incorso": "Duello in corso",
@@ -88,8 +88,11 @@ const TESTI = {
     "st.formato": "Formato",
     "st.elim": "Eliminazione diretta",
     "st.elim.desc": "Chi perde è fuori, fino alla finale",
-    "st.punti": "A punti",
-    "st.punti.desc": "Tutti contro tutti, vince chi ha più vittorie",
+    "st.punti": "Tutti contro tutti",
+    "st.punti.desc": "Ognuno gioca contro tutti, vince chi ha più vittorie",
+    "st.sv": "Svizzero",
+    "st.sv.desc": "Turni a pari vittorie, nessuno eliminato, top cut finale",
+    "st.nota.taglio": " Nel top cut la finale si gioca senza limite di tempo.",
     "st.timer.standard": "Timer per ogni match",
     "st.timer.casual": "Usa un timer",
     "st.nota.standard": "Ogni match è al meglio di 3. Allo scadere del tempo, se nessuno ha vinto 2 duel, è doppia sconfitta.",
@@ -115,6 +118,18 @@ const TESTI = {
     "sg.info.punti": "Tutti contro tutti: {turni} turni, {partite} partite.",
     "sg.info.riposo": " A ogni turno un giocatore riposa.",
     "sg.doppione": "Due giocatori si chiamano \"{nome}\": cambia uno dei due nomi.",
+    "sg.info.sv": "{turni} turni svizzeri da {partite} partite",
+    "sg.info.sv.bye": ", a ogni turno un giocatore ha il bye",
+    "sg.info.sv.taglio": ", poi top {k} a eliminazione diretta",
+    "sg.turni": "Turni svizzeri",
+    "sg.meno.turni": "Un turno in meno",
+    "sg.piu.turni": "Un turno in più",
+    "sg.taglio": "Top cut",
+    "sg.taglio.no": "Nessuno",
+    "sg.consigliati": "Regolamento Konami per {n} giocatori: {turni} turni, {taglio}.",
+    "sg.consigliati.top": "top {k}",
+    "sg.consigliati.notop": "nessun top cut",
+    "sg.ripristina": "Usa questi",
 
     // ---------- Sorteggio ----------
     "car.sopra": "Nuovo torneo",
@@ -128,6 +143,7 @@ const TESTI = {
     "turno.semi": "Semifinali",
     "turno.quarti": "Quarti di finale",
     "turno.ottavi": "Ottavi di finale",
+    "turno.sedicesimi": "Sedicesimi di finale",
     "turno.n": "Turno {n}",
     "match.n": "Match {n}",
     "partita.n": "Partita {n}",
@@ -140,6 +156,7 @@ const TESTI = {
     "tab.concluse1": "{f} di {t} partita conclusa",
     "tab.concluseN": "{f} di {t} partite concluse",
     "tab.riposa": " · Riposa {nome}",
+    "tab.bye": " · Bye: {nome}",
     "tab.concludi": "Concludi il torneo",
     "tab.prosegui": "Prosegui: {turno}",
     "tab.tutte": "Tutte le partite del turno sono concluse.",
@@ -185,6 +202,26 @@ const TESTI = {
     "punti.giocati": "Turni giocati ({n})",
     "punti.riposa": " · riposa {nome}",
     "punti.riposaTitolo": "Riposa: {nome}",
+    "punti.bye": " · bye: {nome}",
+
+    "sv.top": "Top {k}",
+    "sv.tavolo": "Tavolo {n}",
+    "sv.classifica": "Classifica dello svizzero",
+    "sv.giocati": "Turni svizzeri giocati ({n})",
+    "sv.manca1": "Dopo questo turno ne manca 1.",
+    "sv.mancanoN": "Dopo questo turno ne mancano {n}.",
+    "sv.poitaglio": "È l'ultimo turno svizzero: poi i primi {k} vanno al top cut.",
+    "sv.ultimo": "È l'ultimo turno.",
+    "sv.omw": "% avv.",
+    "sv.oomw": "% avv. avv.",
+    "sv.omw.t": "Percentuale di vittorie degli avversari incontrati",
+    "sv.oomw.t": "Percentuale di vittorie degli avversari dei tuoi avversari",
+    "sv.legenda": "V vinte · P perse (il bye conta come vittoria). A pari vittorie contano la percentuale di vittorie degli avversari incontrati e poi quella dei loro avversari, come nel programma ufficiale Konami.",
+    "sv.ritiri": "Ritiri",
+    "sv.ritiri.intro": "Chi si ritira non viene più abbinato dal prossimo turno e non entra nel top cut. I risultati già giocati restano.",
+    "sv.ritira": "Ritira",
+    "sv.riammetti": "Riammetti",
+    "sv.ritirato": "ritirato",
 
     // ---------- Pannello del match ----------
     "pm.aria": "Match del torneo",
@@ -328,6 +365,8 @@ const TESTI = {
     "cr.r.bye": "{nome} passa il turno",
     "cr.r.doppia": "{a} e {b}: doppia sconfitta",
     "cr.r.vince": "{v} batte {p}{punti}",
+    "cr.r.bye.sv": "{nome}: bye (vittoria a tavolino)",
+    "cr.sv.bilancio": "Svizzero {v}–{p}",
   },
 
   en: {
@@ -361,8 +400,8 @@ const TESTI = {
     "home.duello.desc": "Two players, 8000 life points each. History, turn phases and a match timer.",
     "home.duello.tipi": "Standard · Casual",
     "home.torneo": "Tournament",
-    "home.torneo.desc": "4 to 16 players. Random pairings, a bracket and results saved match by match.",
-    "home.torneo.tipi": "Single elimination · Round robin",
+    "home.torneo.desc": "4 to 32 players. Random pairings, a bracket and results saved match by match.",
+    "home.torneo.tipi": "Elimination · Swiss · Round robin",
     "home.nuovo.duello": "New duel",
     "home.nuovo.torneo": "New tournament",
     "home.duello.incorso": "Duel in progress",
@@ -413,6 +452,9 @@ const TESTI = {
     "st.elim.desc": "Lose and you're out, all the way to the final",
     "st.punti": "Round robin",
     "st.punti.desc": "Everyone plays everyone, most wins takes it",
+    "st.sv": "Swiss",
+    "st.sv.desc": "Rounds between equal records, no one eliminated, final top cut",
+    "st.nota.taglio": " In the top cut the final has no time limit.",
     "st.timer.standard": "Timer for each match",
     "st.timer.casual": "Use a timer",
     "st.nota.standard": "Each match is best of 3. When time runs out and nobody has won 2 duels, it's a double loss.",
@@ -438,6 +480,18 @@ const TESTI = {
     "sg.info.punti": "Everyone plays everyone: {turni} rounds, {partite} matches.",
     "sg.info.riposo": " Each round, one player sits out.",
     "sg.doppione": "Two players are named \"{nome}\": change one of the names.",
+    "sg.info.sv": "{turni} Swiss rounds of {partite} matches",
+    "sg.info.sv.bye": ", one player gets a bye each round",
+    "sg.info.sv.taglio": ", then a top {k} single elimination",
+    "sg.turni": "Swiss rounds",
+    "sg.meno.turni": "One round fewer",
+    "sg.piu.turni": "One more round",
+    "sg.taglio": "Top cut",
+    "sg.taglio.no": "None",
+    "sg.consigliati": "Konami policy for {n} players: {turni} rounds, {taglio}.",
+    "sg.consigliati.top": "top {k}",
+    "sg.consigliati.notop": "no top cut",
+    "sg.ripristina": "Use these",
 
     // ---------- Draw ----------
     "car.sopra": "New tournament",
@@ -451,6 +505,7 @@ const TESTI = {
     "turno.semi": "Semifinals",
     "turno.quarti": "Quarterfinals",
     "turno.ottavi": "Round of 16",
+    "turno.sedicesimi": "Round of 32",
     "turno.n": "Round {n}",
     "match.n": "Match {n}",
     "partita.n": "Match {n}",
@@ -463,6 +518,7 @@ const TESTI = {
     "tab.concluse1": "{f} of {t} match finished",
     "tab.concluseN": "{f} of {t} matches finished",
     "tab.riposa": " · {nome} sits out",
+    "tab.bye": " · Bye: {nome}",
     "tab.concludi": "Finish the tournament",
     "tab.prosegui": "Continue: {turno}",
     "tab.tutte": "All matches in this round are finished.",
@@ -508,6 +564,26 @@ const TESTI = {
     "punti.giocati": "Rounds played ({n})",
     "punti.riposa": " · {nome} sits out",
     "punti.riposaTitolo": "Sitting out: {nome}",
+    "punti.bye": " · bye: {nome}",
+
+    "sv.top": "Top {k}",
+    "sv.tavolo": "Table {n}",
+    "sv.classifica": "Swiss standings",
+    "sv.giocati": "Swiss rounds played ({n})",
+    "sv.manca1": "1 round left after this one.",
+    "sv.mancanoN": "{n} rounds left after this one.",
+    "sv.poitaglio": "This is the last Swiss round: then the top {k} go to the top cut.",
+    "sv.ultimo": "This is the last round.",
+    "sv.omw": "Opp. %",
+    "sv.oomw": "Opp. opp. %",
+    "sv.omw.t": "Win percentage of the opponents you played",
+    "sv.oomw.t": "Win percentage of your opponents' opponents",
+    "sv.legenda": "W won · L lost (a bye counts as a win). Ties on wins are broken by your opponents' win percentage, then by their opponents', as in Konami's official software.",
+    "sv.ritiri": "Drops",
+    "sv.ritiri.intro": "A dropped player is no longer paired from the next round and can't make the top cut. Results already played stay.",
+    "sv.ritira": "Drop",
+    "sv.riammetti": "Re-enter",
+    "sv.ritirato": "dropped",
 
     // ---------- Match panel ----------
     "pm.aria": "Tournament match",
@@ -651,6 +727,8 @@ const TESTI = {
     "cr.r.bye": "{nome} advances (bye)",
     "cr.r.doppia": "{a} and {b}: double loss",
     "cr.r.vince": "{v} beat {p}{punti}",
+    "cr.r.bye.sv": "{nome}: bye (win without playing)",
+    "cr.sv.bilancio": "Swiss {v}–{p}",
   },
 };
 
@@ -685,9 +763,12 @@ const REGOLE = {
     <section>
       <h3>Torneo</h3>
       <ul>
-        <li>Da 4 a 16 giocatori, abbinamenti sorteggiati. I match sono <strong>Standard</strong> (al meglio di 3, con timer) o <strong>Casual</strong> (un duel decide il match, un pareggio si rigioca).</li>
+        <li>Da 4 a 32 giocatori, abbinamenti sorteggiati. I match sono <strong>Standard</strong> (al meglio di 3, con timer) o <strong>Casual</strong> (un duel decide il match, un pareggio si rigioca).</li>
         <li><strong>Eliminazione diretta</strong>: chi perde è fuori. Se i giocatori non sono 4, 8 o 16, alcuni passano direttamente al secondo turno (bye), scelti dal sorteggio. Con una doppia sconfitta non passa nessuno dei due e l'avversario del turno dopo avanza. La finale si gioca senza limite di tempo.</li>
-        <li><strong>A punti</strong>: tutti contro tutti, una volta sola. Con un numero dispari di giocatori, a ogni turno uno riposa. In classifica contano i match vinti; a parità, la differenza tra duel vinti e persi, poi lo scontro diretto.</li>
+        <li><strong>Svizzero</strong>: nessuno viene eliminato. Al primo turno gli abbinamenti sono sorteggiati, poi si gioca contro chi ha le stesse vittorie, mai due volte contro lo stesso avversario. Il numero di turni e il top cut seguono il regolamento Konami (da 4 a 8 giocatori: 3 turni; da 9 a 16: 4 turni e top 4; da 17 a 32: 5 turni e top 4) ma si possono cambiare.</li>
+        <li>Nello svizzero, con un numero dispari di giocatori, a ogni turno uno ha il <strong>bye</strong>: vince a tavolino. Tocca a chi ha meno vittorie e non l'ha ancora avuto. A pari vittorie, in classifica conta la percentuale di vittorie degli avversari incontrati, poi quella dei loro avversari. Dal pulsante "Ritiri" si segna chi lascia il torneo: non viene più abbinato e non entra nel top cut.</li>
+        <li><strong>Top cut</strong>: alla fine dello svizzero i primi 4 o 8 giocano a eliminazione diretta (1° contro 4°, 2° contro 3°…). La finale si gioca senza limite di tempo.</li>
+        <li><strong>Tutti contro tutti</strong>: ognuno gioca contro tutti, una volta sola. Con un numero dispari di giocatori, a ogni turno uno riposa. In classifica contano i match vinti; a parità, la differenza tra duel vinti e persi, poi lo scontro diretto.</li>
         <li>Tocca un match nel tabellone per giocarlo sul tavolo, riprenderlo o assegnare il risultato senza giocarlo. Dal tavolo, "Tabellone" torna indietro senza fermare il duel.</li>
         <li>Quando tutte le partite del turno sono concluse, "Prosegui" prepara il turno successivo. Da quel momento i risultati del turno chiuso non si possono più cambiare.</li>
       </ul>
@@ -739,8 +820,11 @@ const REGOLE = {
     <section>
       <h3>Tournament</h3>
       <ul>
-        <li>4 to 16 players, random pairings. Matches are <strong>Standard</strong> (best of 3, with a timer) or <strong>Casual</strong> (one duel decides the match, a draw is replayed).</li>
+        <li>4 to 32 players, random pairings. Matches are <strong>Standard</strong> (best of 3, with a timer) or <strong>Casual</strong> (one duel decides the match, a draw is replayed).</li>
         <li><strong>Single elimination</strong>: lose and you're out. If there aren't 4, 8 or 16 players, some go straight to round 2 (bye), chosen by the draw. After a double loss neither player advances, and their next-round opponent goes through. The final has no time limit.</li>
+        <li><strong>Swiss</strong>: nobody is eliminated. Round 1 pairings are drawn, then you play someone with the same number of wins, never the same opponent twice. The number of rounds and the top cut follow Konami's policy (4 to 8 players: 3 rounds; 9 to 16: 4 rounds and top 4; 17 to 32: 5 rounds and top 4) but can be changed.</li>
+        <li>In Swiss, with an odd number of players, one player gets a <strong>bye</strong> each round: a win without playing. It goes to the player with the fewest wins who hasn't had one yet. Ties on wins are broken by the win percentage of the opponents you played, then by their opponents'. The "Drops" button marks players who leave: they are no longer paired and can't make the top cut.</li>
+        <li><strong>Top cut</strong>: after the Swiss rounds the top 4 or 8 play single elimination (1st vs 4th, 2nd vs 3rd…). The final has no time limit.</li>
         <li><strong>Round robin</strong>: everyone plays everyone once. With an odd number of players, one sits out each round. Standings count matches won; ties are broken by the difference between duels won and lost, then head-to-head.</li>
         <li>Tap a match in the bracket to play it at the table, resume it, or set the result without playing. From the table, "Bracket" goes back without stopping the duel.</li>
         <li>When every match in the round is finished, "Continue" sets up the next round. From then on, the results of the closed round can't be changed.</li>

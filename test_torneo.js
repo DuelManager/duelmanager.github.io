@@ -8,8 +8,8 @@ function seme(s) {
 }
 const nomi = (n) => Array.from({ length: n }, (_, i) => `G${i + 1}`);
 
-// ---------- Eliminazione diretta: ogni numero da 4 a 16 ----------
-for (let n = 4; n <= 16; n++) {
+// ---------- Eliminazione diretta: ogni numero da 4 a 32 ----------
+for (let n = 4; n <= 32; n++) {
   const t = T.creaTorneo({ tipo: "casual", formato: "eliminazione", nomi: nomi(n), minuti: null }, seme(n));
   const s = T.potenzaDiDue(n);
   assert.strictEqual(t.numeroTurni, Math.log2(s));
@@ -128,8 +128,8 @@ for (let n = 4; n <= 16; n++) {
   assert.strictEqual(m.partita, null);
 }
 
-// ---------- A punti: tutti contro tutti, una volta sola ----------
-for (let n = 4; n <= 16; n++) {
+// ---------- Tutti contro tutti, una volta sola ----------
+for (let n = 4; n <= 32; n++) {
   const t = T.creaTorneo({ tipo: "casual", formato: "punti", nomi: nomi(n), minuti: null }, seme(100 + n));
   assert.strictEqual(t.numeroTurni, n % 2 === 0 ? n - 1 : n);
   const coppie = new Set();
@@ -197,6 +197,197 @@ function giocaTutto(t, tabella) {
   const c = T.classifica(t);
   assert.deepStrictEqual(c.map((r) => r.pos), [1, 1, 1, 4]);
   assert.strictEqual(c[3].nome, "D");
+}
+
+// =============================================================
+// SVIZZERO
+// =============================================================
+
+// Turni e top cut consigliati (tabella del regolamento Konami)
+assert.strictEqual(T.turniSvizzeriConsigliati(4), 3);
+assert.strictEqual(T.turniSvizzeriConsigliati(8), 3);
+assert.strictEqual(T.turniSvizzeriConsigliati(9), 4);
+assert.strictEqual(T.turniSvizzeriConsigliati(16), 4);
+assert.strictEqual(T.turniSvizzeriConsigliati(17), 5);
+assert.strictEqual(T.turniSvizzeriConsigliati(32), 5);
+assert.strictEqual(T.topCutConsigliato(8), 0);
+assert.strictEqual(T.topCutConsigliato(9), 4);
+assert.strictEqual(T.topCutConsigliato(32), 4);
+assert.deepStrictEqual(T.topCutPossibili(4), [0]);
+assert.deepStrictEqual(T.topCutPossibili(5), [0, 4]);
+assert.deepStrictEqual(T.topCutPossibili(9), [0, 4, 8]);
+assert.deepStrictEqual(T.ordineTesteDiSerie(4), [1, 4, 2, 3]);
+assert.deepStrictEqual(T.ordineTesteDiSerie(8), [1, 8, 4, 5, 2, 7, 3, 6]);
+assert.throws(() => T.creaTorneo({ tipo: "casual", formato: "svizzero", nomi: nomi(4), minuti: null, turni: 4 }));
+assert.throws(() => T.creaTorneo({ tipo: "casual", formato: "svizzero", nomi: nomi(8), minuti: null, taglio: 8 }));
+
+// Gioca il turno in corso: vince a sorte, ogni tanto doppia sconfitta (solo nello svizzero)
+function giocaTurno(t, caso, doppie = true) {
+  for (const m of t.turni[t.turnoCorrente].partite) {
+    if (m.stato === "conclusa") continue;
+    const x = caso();
+    const lato = doppie && t.turni[t.turnoCorrente].fase === "svizzero" && x < 0.08 ? null : x < 0.54 ? "a" : "b";
+    assert.ok(T.assegnaRisultato(t, m.id, lato, null, 0));
+  }
+}
+
+// Tornei completi da 4 a 32 giocatori, con turni e top cut consigliati
+const statistiche = { uguali: 0, totali: 0 };
+for (let n = 4; n <= 32; n++) {
+  const caso = seme(500 + n);
+  const t = T.creaTorneo({ tipo: "standard", formato: "svizzero", nomi: nomi(n), minuti: 50 }, caso);
+  const turniSv = T.turniSvizzeriConsigliati(n);
+  const taglio = T.topCutConsigliato(n);
+  assert.strictEqual(t.turniSvizzeri, turniSv);
+  assert.strictEqual(t.numeroTurni, turniSv + (taglio ? Math.log2(taglio) : 0));
+
+  const coppie = new Set();
+  const bye = new Map();
+  let guardia = 0;
+  while (!t.concluso && guardia++ < 20) {
+    const turno = t.turni[t.turnoCorrente];
+    if (turno.fase === "svizzero") {
+      // tutti giocano una volta (o hanno il bye), nessuna rivincita
+      const visti = new Set();
+      for (const m of turno.partite) {
+        for (const g of [m.a, m.b]) { assert.ok(!visti.has(g), `n=${n}: giocatore due volte`); visti.add(g); }
+        const k = [m.a, m.b].sort((x, y) => x - y).join("-");
+        assert.ok(!coppie.has(k), `n=${n}: rivincita ${k} al turno ${t.turnoCorrente + 1}`);
+        coppie.add(k);
+      }
+      if (n % 2 === 1) {
+        assert.notStrictEqual(turno.riposa, null);
+        assert.ok(!visti.has(turno.riposa));
+        bye.set(turno.riposa, (bye.get(turno.riposa) || 0) + 1);
+        visti.add(turno.riposa);
+      } else {
+        assert.strictEqual(turno.riposa, null);
+      }
+      assert.strictEqual(visti.size, n, `n=${n}: manca qualcuno al turno ${t.turnoCorrente + 1}`);
+      // dal secondo turno si gioca tra vittorie uguali o vicine: in media la differenza
+      // non supera 1 (a volte i bye e le rivincite da evitare costringono a scendere)
+      if (t.turnoCorrente > 0) {
+        const v = new Map(T.classificaSvizzera(t).map((r) => [r.id, r.vinte - (r.id === turno.riposa ? 1 : 0)]));
+        const scarto = turno.partite.reduce((x, m) => x + Math.abs(v.get(m.a) - v.get(m.b)), 0);
+        assert.ok(scarto <= turno.partite.length, `n=${n}: abbinamenti troppo lontani per vittorie`);
+        const uguali = turno.partite.filter((m) => v.get(m.a) === v.get(m.b)).length;
+        statistiche.uguali += uguali; statistiche.totali += turno.partite.length;
+      }
+    }
+    giocaTurno(t, caso);
+    assert.ok(T.prosegui(t, caso));
+  }
+  assert.ok(t.concluso, `n=${n}: torneo non concluso`);
+  assert.ok([...bye.values()].every((x) => x === 1), `n=${n}: qualcuno ha avuto due bye`);
+  assert.notStrictEqual(t.campione, null);
+
+  // Top cut: i primi della classifica svizzera, 1° contro ultimo del taglio
+  const tagli = t.turni.filter((tu) => tu.fase === "taglio");
+  assert.strictEqual(tagli.length, taglio ? Math.log2(taglio) : 0);
+  if (taglio) {
+    const classif = T.classificaSvizzera(t);
+    const primi = classif.slice(0, taglio).map((r) => r.id);
+    const posti = T.ordineTesteDiSerie(taglio).map((s) => primi[s - 1]);
+    assert.deepStrictEqual(tagli[0].partite.flatMap((m) => [m.a, m.b]), posti);
+    const finale = tagli[tagli.length - 1].partite[0];
+    assert.strictEqual(t.campione, finale.vincitore);
+    // la finale si gioca senza tempo, gli altri turni del taglio con il timer
+    const rFinale = t.turni.length - 1;
+    assert.strictEqual(T.durataMatch(t, rFinale), null);
+    if (tagli.length > 1) assert.strictEqual(T.durataMatch(t, rFinale - 1), 50);
+  }
+
+  // Piazzamenti: tutti presenti, il campione primo
+  const pz = T.piazzamenti(t);
+  assert.strictEqual(pz.length, n);
+  assert.strictEqual(pz[0].id, t.campione);
+  assert.deepStrictEqual(pz.map((x) => x.id).sort((a, b) => a - b), [...Array(n).keys()]);
+  for (let i = 1; i < pz.length; i++) assert.ok(pz[i].pos >= pz[i - 1].pos);
+}
+
+// Nel complesso quasi tutte le coppie hanno le stesse vittorie
+assert.ok(statistiche.uguali / statistiche.totali > 0.8, `solo ${statistiche.uguali} su ${statistiche.totali} a pari vittorie`);
+console.log(`  svizzero: ${statistiche.uguali} coppie su ${statistiche.totali} a pari vittorie dal 2° turno`);
+
+// Turni massimi (tutti contro tutti): nessun errore, tutti sempre abbinati
+for (let n = 4; n <= 12; n++) {
+  const caso = seme(900 + n);
+  const lim = T.limitiTurniSvizzeri(n);
+  const t = T.creaTorneo({ tipo: "casual", formato: "svizzero", nomi: nomi(n), minuti: null, turni: lim.max, taglio: 0 }, caso);
+  while (!t.concluso) { giocaTurno(t, caso, false); assert.ok(T.prosegui(t, caso)); }
+  assert.strictEqual(t.turni.length, lim.max);
+}
+
+// Spareggi: vittorie, % vittorie degli avversari, % degli avversari degli avversari
+{
+  // 4 giocatori, 2 turni. Turno 1: A batte B, C batte D. Turno 2 (a mano): A batte C, D batte B.
+  const t = T.creaTorneo({ tipo: "casual", formato: "svizzero", nomi: ["A", "B", "C", "D"], minuti: null, turni: 2, taglio: 0 },
+    () => 0.99);   // sorteggio fisso
+  const id = (nome) => t.giocatori.find((g) => g.nome === nome).id;
+  const turno1 = t.turni[0].partite;
+  // sistemo le coppie del primo turno per il test
+  turno1[0].a = id("A"); turno1[0].b = id("B");
+  turno1[1].a = id("C"); turno1[1].b = id("D");
+  T.assegnaRisultato(t, turno1[0].id, "a", null, 0);
+  T.assegnaRisultato(t, turno1[1].id, "a", null, 0);
+  assert.ok(T.prosegui(t, () => 0.5));
+  const turno2 = t.turni[1].partite;
+  for (const m of turno2) {
+    const nomiM = [T.nomeGiocatore(t, m.a), T.nomeGiocatore(t, m.b)];
+    const vince = nomiM.includes("A") ? "A" : "D";
+    T.assegnaRisultato(t, m.id, T.nomeGiocatore(t, m.a) === vince ? "a" : "b", null, 0);
+  }
+  assert.ok(T.prosegui(t, () => 0.5));
+  assert.ok(t.concluso);
+  const c = T.classificaSvizzera(t);
+  // A 2-0; C e D 1-1; B 0-2. C ha incontrato D (50%) e A (100%) = 75%; D ha incontrato C (50%) e B (0%) = 25%
+  assert.deepStrictEqual(c.map((r) => r.nome), ["A", "C", "D", "B"]);
+  const C = c.find((r) => r.nome === "C");
+  const D = c.find((r) => r.nome === "D");
+  assert.ok(Math.abs(C.omw - 0.75) < 1e-9);
+  assert.ok(Math.abs(D.omw - 0.25) < 1e-9);
+  assert.deepStrictEqual(c.map((r) => r.pos), [1, 2, 3, 4]);
+  assert.strictEqual(t.campione, id("A"));
+}
+
+// Ritiri: chi si ritira non viene più abbinato e non entra nel top cut
+{
+  const caso = seme(77);
+  const t = T.creaTorneo({ tipo: "standard", formato: "svizzero", nomi: nomi(10), minuti: 50 }, caso);
+  giocaTurno(t, caso, false);
+  const ritirato = t.turni[0].partite[0].a;
+  assert.ok(T.puoRitirare(t));
+  assert.ok(T.impostaRitiro(t, ritirato, true));
+  assert.ok(T.prosegui(t, caso));
+  const turno2 = t.turni[1];
+  assert.ok(turno2.partite.every((m) => m.a !== ritirato && m.b !== ritirato));
+  assert.notStrictEqual(turno2.riposa, ritirato);
+  assert.strictEqual(turno2.partite.length, 4);            // 9 attivi: 4 match e un bye
+  assert.notStrictEqual(turno2.riposa, null);
+  // riammesso e di nuovo ritirato: resta fuori una volta sola
+  assert.ok(T.impostaRitiro(t, ritirato, false));
+  assert.ok(T.impostaRitiro(t, ritirato, true));
+  assert.deepStrictEqual(t.ritirati, [ritirato]);
+  while (t.turni[t.turnoCorrente].fase === "svizzero") { giocaTurno(t, caso, false); assert.ok(T.prosegui(t, caso)); }
+  const taglio = t.turni[t.turnoCorrente];
+  assert.strictEqual(taglio.fase, "taglio");
+  assert.ok(taglio.partite.every((m) => m.a !== ritirato && m.b !== ritirato));
+  assert.strictEqual(T.puoRitirare(t), false);              // nel top cut non ci si ritira
+  assert.strictEqual(T.impostaRitiro(t, 3, true), false);
+}
+
+// Top cut ridotto se per i ritiri restano pochi giocatori
+{
+  const caso = seme(78);
+  const t = T.creaTorneo({ tipo: "casual", formato: "svizzero", nomi: nomi(9), minuti: null, turni: 2, taglio: 8 }, caso);
+  giocaTurno(t, caso, false);
+  for (const id of [0, 1, 2]) T.impostaRitiro(t, id, true);
+  assert.ok(T.prosegui(t, caso));
+  giocaTurno(t, caso, false);
+  assert.ok(T.prosegui(t, caso));
+  assert.strictEqual(t.taglio, 4);                           // 6 attivi: top 8 impossibile, diventa top 4
+  assert.strictEqual(t.turni[t.turnoCorrente].partite.length, 2);
+  assert.strictEqual(t.numeroTurni, 2 + 2);
 }
 
 console.log("Test torneo superati");

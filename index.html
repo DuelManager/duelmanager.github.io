@@ -329,7 +329,7 @@ kbd {
   min-width: 64px; text-align: center; font-family: var(--font-num); font-weight: 700;
   font-size: 1.8rem; font-variant-numeric: tabular-nums;
 }
-.griglia-nomi { list-style: none; margin: 0; padding: 0; columns: 260px 2; column-gap: 16px; }
+.griglia-nomi { list-style: none; margin: 0; padding: 0; columns: 240px 3; column-gap: 16px; }
 .griglia-nomi li {
   break-inside: avoid; display: grid; grid-template-columns: 28px minmax(0, 1fr);
   align-items: center; gap: 8px; margin-bottom: 8px;
@@ -449,6 +449,7 @@ table.classifica { width: 100%; border-collapse: collapse; font-variant-numeric:
 .classifica td { padding: 8px; border-bottom: 1px solid var(--line); }
 .classifica tr:last-child td { border-bottom: 0; }
 .classifica .num { text-align: right; }
+.classifica th { white-space: nowrap; }
 .classifica .pos { font-family: var(--font-num); font-weight: 700; width: 2.5em; }
 .classifica .chi { max-width: 14ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .classifica tr.testa td { font-weight: 700; }
@@ -643,6 +644,31 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   padding: 10px 16px; border-radius: 8px; font-weight: 500; box-shadow: 0 6px 24px rgb(0 0 0 / .25);
 }
 
+/* ---------- Torneo svizzero ---------- */
+.scelta.tre { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 600px) { .scelta.tre { grid-template-columns: minmax(0, 1fr); } }
+.sg-svizzero { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 28px; }
+.sv-opzione { display: grid; gap: 8px; }
+.sv-consigliati { flex: 1 1 100%; margin: 0; }
+.link {
+  background: none; border: 0; padding: 0; margin-left: 6px; font: inherit; font-weight: 600;
+  color: var(--p0); text-decoration: underline; text-underline-offset: 2px;
+}
+.segmenti label[hidden] { display: none; }
+.btn-piccolo { padding: 6px 10px; font-size: .9rem; }
+.classifica tr.ritirato td { color: var(--muted); }
+.classifica tr.ritirato .chi { text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 60%, transparent); }
+.vista-svizzero-fine { display: grid; }
+.lista-ritiri { list-style: none; margin: 0; padding: 0; display: grid; }
+.riga-ritiro {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 12px;
+  padding: 8px 0; border-top: 1px solid var(--line);
+}
+.riga-ritiro:first-child { border-top: 0; }
+.riga-ritiro .chi { font-weight: 600; overflow-wrap: anywhere; }
+.riga-ritiro.ritirato .chi { color: var(--muted); text-decoration: line-through; }
+.riga-ritiro .btn { padding: 7px 12px; }
+
 /* ---------- Pezzi comuni aggiunti per il telefono ---------- */
 .zona-turno { display: grid; gap: 12px; }
 .sg-testa { display: grid; gap: 6px; }
@@ -826,6 +852,8 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   .esito .azioni { gap: 6px; }
   .esito .btn { padding: 9px 10px; }
   .esito .stella.con-testo { padding: 6px 12px; }
+  /* Classifica dello svizzero: sul telefono resta la prima percentuale (la seconda è l'ultimo spareggio) */
+  .classifica .col-oomw { display: none; }
 }
 
 /* Telefono in verticale (se si sceglie di non girarlo): i due giocatori in alto, il centro sotto */
@@ -877,10 +905,11 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   #setup-giocatori {
     max-width: none; height: 100%; padding: 10px 14px; gap: 6px 14px; align-content: stretch;
     grid-template-columns: auto minmax(0, 1fr) auto auto;
-    grid-template-rows: auto minmax(2.6rem, auto) minmax(0, 1fr) auto;   /* riga sotto: sempre alta 2 righe */
+    grid-template-rows: auto minmax(2.6rem, auto) auto minmax(0, 1fr) auto;   /* riga sotto: sempre alta 2 righe */
     grid-template-areas:
       "indietro titolo contatore crea"
       "sotto sotto sotto sotto"
+      "svizzero svizzero svizzero svizzero"
       "nomi nomi nomi nomi"
       "errore errore nota nota";
   }
@@ -906,6 +935,13 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   #errore-nomi { grid-area: errore; margin: 0; min-height: 0; }
   #nota-sostituisci-torneo { grid-area: nota; align-self: center; text-align: right; font-size: .8rem; }
   #setup-giocatori .sg-crea { grid-area: crea; align-self: center; padding: 10px 16px; }
+  #sg-svizzero { grid-area: svizzero; flex-wrap: nowrap; align-items: center; gap: 8px 18px; }
+  #sg-svizzero .sv-opzione { display: flex; align-items: center; gap: 10px; }
+  #sg-svizzero .contatore button { width: 36px; height: 36px; }
+  #sg-svizzero .contatore output { min-width: 40px; font-size: 1.3rem; }
+  #sg-svizzero .segmenti span { padding: 6px 12px; font-size: 1rem; }
+  #sg-svizzero .sv-consigliati { flex: 1 1 auto; min-width: 0; text-align: right; font-size: .8rem; }
+  #sg-svizzero .label, #sg-svizzero .segmenti span { white-space: nowrap; }
 
   /* Tabellone: una riga in alto con turno e "Prosegui", sotto il tabellone che scorre */
   #tabellone {
@@ -933,6 +969,7 @@ details.giocati[open] > summary { margin-bottom: 4px; }
     display: flex; flex-direction: column;
   }
   #vista-torneo > * + * { margin-top: 10px; }
+  .vista-svizzero-fine { flex: none; }
 
   /* Tabellone piccolo: al centro, con il bordo che segue la sua misura.
      Tabellone grande: occupa al massimo lo spazio libero e scorre al suo interno. */
@@ -1083,8 +1120,8 @@ details.giocati[open] > summary { margin-bottom: 4px; }
       <article class="scelta-grande" data-tipo="torneo">
         <div class="scelta-corpo">
           <h2 data-t="home.torneo">Torneo</h2>
-          <p data-t="home.torneo.desc">Da 4 a 16 giocatori. Abbinamenti sorteggiati, tabellone e risultati salvati match per match.</p>
-          <span class="label" data-t="home.torneo.tipi">Eliminazione diretta · A punti</span>
+          <p data-t="home.torneo.desc">Da 4 a 32 giocatori. Abbinamenti sorteggiati, tabellone e risultati salvati match per match.</p>
+          <span class="label" data-t="home.torneo.tipi">Eliminazione · Svizzero · Tutti contro tutti</span>
         </div>
         <div class="scelta-azioni" id="azioni-torneo"></div>
       </article>
@@ -1177,16 +1214,21 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 
     <fieldset class="campo-form gruppo">
       <legend class="label" data-t="st.formato">Formato</legend>
-      <div class="scelta">
+      <div class="scelta tre">
         <label for="tf-eliminazione">
           <input type="radio" name="t-formato" id="tf-eliminazione" value="eliminazione" checked>
           <strong data-t="st.elim">Eliminazione diretta</strong>
           <span data-t="st.elim.desc">Chi perde è fuori, fino alla finale</span>
         </label>
+        <label for="tf-svizzero">
+          <input type="radio" name="t-formato" id="tf-svizzero" value="svizzero">
+          <strong data-t="st.sv">Svizzero</strong>
+          <span data-t="st.sv.desc">Turni a pari vittorie, nessuno eliminato, top cut finale</span>
+        </label>
         <label for="tf-punti">
           <input type="radio" name="t-formato" id="tf-punti" value="punti">
-          <strong data-t="st.punti">A punti</strong>
-          <span data-t="st.punti.desc">Tutti contro tutti, vince chi ha più vittorie</span>
+          <strong data-t="st.punti">Tutti contro tutti</strong>
+          <span data-t="st.punti.desc">Ognuno gioca contro tutti, vince chi ha più vittorie</span>
         </label>
       </div>
     </fieldset>
@@ -1222,6 +1264,28 @@ details.giocati[open] > summary { margin-bottom: 4px; }
         <button type="button" id="piu-g" data-t-aria="sg.piu" aria-label="Un giocatore in più">+</button>
       </div>
       <p class="nota" id="info-giocatori"></p>
+    </div>
+
+    <!-- Solo svizzero: numero di turni e top cut (di base quelli del regolamento Konami) -->
+    <div class="sg-svizzero" id="sg-svizzero" hidden>
+      <div class="sv-opzione">
+        <span class="label" id="etichetta-turni" data-t="sg.turni">Turni svizzeri</span>
+        <div class="contatore" role="group" aria-labelledby="etichetta-turni">
+          <button type="button" id="meno-turni" data-t-aria="sg.meno.turni" aria-label="Un turno in meno">−</button>
+          <output id="num-turni" aria-live="polite">3</output>
+          <button type="button" id="piu-turni" data-t-aria="sg.piu.turni" aria-label="Un turno in più">+</button>
+        </div>
+      </div>
+      <div class="sv-opzione">
+        <span class="label" id="etichetta-taglio" data-t="sg.taglio">Top cut</span>
+        <div class="segmenti" role="radiogroup" aria-labelledby="etichetta-taglio">
+          <label><input type="radio" name="taglio" value="0"><span data-t="sg.taglio.no">Nessuno</span></label>
+          <label><input type="radio" name="taglio" value="4"><span>Top 4</span></label>
+          <label><input type="radio" name="taglio" value="8"><span>Top 8</span></label>
+        </div>
+      </div>
+      <p class="nota sv-consigliati"><span id="sg-consigliati"></span>
+        <button type="button" class="link" id="sg-ripristina" data-t="sg.ripristina" hidden>Usa questi</button></p>
     </div>
 
     <div class="campo-form sg-nomi">
@@ -1441,6 +1505,18 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   </div>
 </dialog>
 
+<!-- Ritiri dal torneo svizzero -->
+<dialog id="dialogo-ritiri" class="pannello" aria-labelledby="titolo-ritiri">
+  <div class="finestra-testa">
+    <h2 class="titolo-dialogo" id="titolo-ritiri" data-t="sv.ritiri">Ritiri</h2>
+    <button type="button" class="btn btn-leggero" data-chiudi data-t="chiudi">Chiudi</button>
+  </div>
+  <div class="finestra-corpo">
+    <p class="nota" data-t="sv.ritiri.intro">Chi si ritira non viene più abbinato dal prossimo turno e non entra nel top cut. I risultati già giocati restano.</p>
+    <ul class="lista-ritiri" id="lista-ritiri"></ul>
+  </div>
+</dialog>
+
 <!-- Cronologia del duel in corso (sul telefono, da "Strumenti") -->
 <dialog id="dialogo-registro" class="pannello largo" aria-labelledby="titolo-registro">
   <div class="finestra-testa">
@@ -1516,16 +1592,16 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="partita.js?v=202610171301"></script>
-<script src="torneo.js?v=202610171301"></script>
-<script src="cronologia.js?v=202610171301"></script>
-<script src="base.js?v=202610171301"></script>
-<script src="lingua.js?v=202610171301"></script>
-<script src="duello.js?v=202610171301"></script>
-<script src="torneo-ui.js?v=202610171301"></script>
-<script src="cronologia-ui.js?v=202610171301"></script>
-<script src="app.js?v=202610171301"></script>
+<script src="partita.js?v=202610191350"></script>
+<script src="torneo.js?v=202610191350"></script>
+<script src="cronologia.js?v=202610191350"></script>
+<script src="base.js?v=202610191350"></script>
+<script src="lingua.js?v=202610191350"></script>
+<script src="duello.js?v=202610191350"></script>
+<script src="torneo-ui.js?v=202610191350"></script>
+<script src="cronologia-ui.js?v=202610191350"></script>
+<script src="app.js?v=202610191350"></script>
 
-<script src="pwa.js?v=202610171301"></script>
+<script src="pwa.js?v=202610191350"></script>
 </body>
 </html>

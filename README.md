@@ -4,7 +4,7 @@ Gestore di partite per Yu-Gi-Oh! giocato con le carte fisiche.
 
 - Life point con cronologia e annullamento, fasi del turno, moneta e dado
 - Timer da match secondo il regolamento attuale (modalità Standard) o duello libero (Casual)
-- Tornei da 4 a 16 giocatori: eliminazione diretta o a punti, con sorteggio e tabellone
+- Tornei da 4 a 32 giocatori: eliminazione diretta, svizzero con top cut o tutti contro tutti, con sorteggio e tabellone
 - Cronologia delle ultime 15 partite e preferiti
 - In italiano e in inglese
 

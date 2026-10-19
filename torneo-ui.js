@@ -6,8 +6,9 @@
 let pannelloId = null;       // match aperto nel pannello
 let giocatiAperto = false;   // "Turni giocati" aperto o chiuso (torneo a punti)
 
+// turni e taglio (solo svizzero): null = quelli consigliati dal regolamento per il numero di giocatori
 function bozzaPredefinita() {
-  return { tipo: "standard", formato: "eliminazione", usaTimer: true, minuti: 50, numero: 8, nomi: [] };
+  return { tipo: "standard", formato: "eliminazione", usaTimer: true, minuti: 50, numero: 8, nomi: [], turni: null, taglio: null };
 }
 
 function bozza() {
@@ -19,20 +20,47 @@ function nomePredefinito(i) { return tr("giocatore.n", { n: i + 1 }); }
 
 // Nome di un turno nella lingua scelta
 function nomeTurnoDaPartite(partiteNelTurno) {
-  const chiave = { 1: "turno.finale", 2: "turno.semi", 4: "turno.quarti", 8: "turno.ottavi" }[partiteNelTurno];
+  const chiave = { 1: "turno.finale", 2: "turno.semi", 4: "turno.quarti", 8: "turno.ottavi", 16: "turno.sedicesimi" }[partiteNelTurno];
   return chiave ? tr(chiave) : nomeTurnoEliminazione(partiteNelTurno);
 }
 
+function nomeFormato(formato) {
+  return tr({ eliminazione: "st.elim", punti: "st.punti", svizzero: "st.sv" }[formato]);
+}
+
+// Svizzero: il turno r è del top cut? (vale anche per turni non ancora creati)
+function turnoDelTaglio(t, r) {
+  return t.formato === "svizzero" && r >= t.turniSvizzeri;
+}
+
+// Partite del turno r a eliminazione (tabellone o top cut)
+function partiteEliminazione(t, r) {
+  if (t.formato === "svizzero") return t.taglio / 2 ** (r - t.turniSvizzeri + 1);
+  return t.dimensione / 2 ** (r + 1);
+}
+
 function nomeTurno(t, r) {
-  if (t.formato === "eliminazione") return nomeTurnoDaPartite(t.dimensione / 2 ** (r + 1));
+  if (t.formato === "eliminazione" || turnoDelTaglio(t, r)) return nomeTurnoDaPartite(partiteEliminazione(t, r));
   return tr("turno.n", { n: r + 1 });
 }
 
+// "Turno 2 di 4" nello svizzero e nel tutti contro tutti, "Top 4 · Semifinali" nel top cut
+function titoloTurno(t, r) {
+  if (t.formato === "punti") return tr("tab.turnodi", { n: r + 1, tot: t.numeroTurni });
+  if (t.formato === "svizzero") {
+    return turnoDelTaglio(t, r)
+      ? `${tr("sv.top", { k: t.taglio })} · ${nomeTurno(t, r)}`
+      : tr("tab.turnodi", { n: r + 1, tot: t.turniSvizzeri });
+  }
+  return nomeTurno(t, r);
+}
+
 function etichettaMatch(t, r, i) {
-  if (t.formato === "eliminazione") {
-    const partite = t.dimensione / 2 ** (r + 1);
+  if (t.formato === "eliminazione" || turnoDelTaglio(t, r)) {
+    const partite = partiteEliminazione(t, r);
     return partite > 1 ? `${nomeTurno(t, r)} · ${tr("match.n", { n: i + 1 })}` : nomeTurno(t, r);
   }
+  if (t.formato === "svizzero") return `${nomeTurno(t, r)} · ${tr("sv.tavolo", { n: i + 1 })}`;
   return `${nomeTurno(t, r)} · ${tr("partita.n", { n: i + 1 })}`;
 }
 
@@ -59,7 +87,7 @@ function preparaSetupTorneo() {
 function aggiornaSetupTorneo() {
   const b = bozza();
   b.tipo = $("#tt-standard").checked ? "standard" : "casual";
-  b.formato = $("#tf-eliminazione").checked ? "eliminazione" : "punti";
+  b.formato = $("#tf-eliminazione").checked ? "eliminazione" : $("#tf-svizzero").checked ? "svizzero" : "punti";
   b.usaTimer = $("#t-usa-timer").checked;
   const m = parseInt($("#t-minuti").value, 10);
   if (m >= 1) b.minuti = Math.min(m, 180);
@@ -69,6 +97,7 @@ function aggiornaSetupTorneo() {
   if (b.tipo === "standard") {
     nota = tr("st.nota.standard");
     if (b.formato === "eliminazione") nota += tr("st.nota.finale");
+    if (b.formato === "svizzero") nota += tr("st.nota.taglio");
   } else {
     nota = tr("st.nota.casual");
   }
@@ -104,7 +133,7 @@ function preparaSetupGiocatori() {
   const b = bozza();
   $("#riepilogo-torneo").textContent = [
     b.tipo === "standard" ? "Standard" : "Casual",
-    tr(b.formato === "eliminazione" ? "st.elim" : "st.punti"),
+    nomeFormato(b.formato),
     b.usaTimer ? tr("sg.timer", { m: b.minuti }) : tr("sg.senzatimer"),
   ].join(" · ");
   $("#nota-sostituisci-torneo").hidden = !(app.torneo && !app.torneo.concluso);
@@ -113,6 +142,12 @@ function preparaSetupGiocatori() {
 }
 
 function descriviFormato(formato, n) {
+  if (formato === "svizzero") {
+    const { turni, taglio } = opzioniSvizzero(n);
+    return tr("sg.info.sv", { turni, partite: Math.floor(n / 2) }) +
+      (n % 2 === 1 ? tr("sg.info.sv.bye") : "") +
+      (taglio ? tr("sg.info.sv.taglio", { k: taglio }) : "") + ".";
+  }
   if (formato === "eliminazione") {
     const s = potenzaDiDue(n);
     const bye = s - n;
@@ -138,7 +173,66 @@ function disegnaNomi() {
     </li>`;
   }).join("");
   $("#info-giocatori").textContent = descriviFormato(b.formato, n);
+  disegnaOpzioniSvizzero();
 }
+
+// ---------- Svizzero: turni e top cut ----------
+// Valori scelti (o consigliati), sempre validi per n giocatori
+function opzioniSvizzero(n) {
+  const b = bozza();
+  const lim = limitiTurniSvizzeri(n);
+  const turni = Math.max(lim.min, Math.min(lim.max, b.turni ?? turniSvizzeriConsigliati(n)));
+  const possibili = topCutPossibili(n);
+  let taglio = b.taglio ?? topCutConsigliato(n);
+  while (!possibili.includes(taglio)) taglio = taglio / 2 >= 4 ? taglio / 2 : 0;
+  return { turni, taglio, lim, possibili };
+}
+
+function disegnaOpzioniSvizzero() {
+  const b = bozza();
+  const box = $("#sg-svizzero");
+  box.hidden = b.formato !== "svizzero";
+  if (box.hidden) return;
+  const n = b.numero;
+  const { turni, taglio, lim, possibili } = opzioniSvizzero(n);
+  $("#num-turni").textContent = turni;
+  $("#meno-turni").disabled = turni <= lim.min;
+  $("#piu-turni").disabled = turni >= lim.max;
+  $$("input[name=taglio]").forEach((r) => {
+    const k = Number(r.value);
+    r.checked = k === taglio;
+    r.disabled = !possibili.includes(k);
+    r.closest("label").hidden = r.disabled;
+  });
+  const consT = turniSvizzeriConsigliati(n);
+  const consK = topCutConsigliato(n);
+  $("#sg-consigliati").textContent = tr("sg.consigliati", {
+    n, turni: consT, taglio: consK ? tr("sg.consigliati.top", { k: consK }) : tr("sg.consigliati.notop"),
+  });
+  $("#sg-ripristina").hidden = turni === consT && taglio === consK;
+}
+
+$("#meno-turni").addEventListener("click", () => cambiaTurniSvizzeri(-1));
+$("#piu-turni").addEventListener("click", () => cambiaTurniSvizzeri(1));
+function cambiaTurniSvizzeri(d) {
+  const b = bozza();
+  const { turni, lim } = opzioniSvizzero(b.numero);
+  b.turni = Math.max(lim.min, Math.min(lim.max, turni + d));
+  disegnaNomi();
+  salva();
+}
+$$("input[name=taglio]").forEach((r) => r.addEventListener("change", () => {
+  bozza().taglio = Number(r.value);
+  disegnaNomi();
+  salva();
+}));
+$("#sg-ripristina").addEventListener("click", () => {
+  const b = bozza();
+  b.turni = null;
+  b.taglio = null;
+  disegnaNomi();
+  salva();
+});
 
 function cambiaNumero(d) {
   const b = bozza();
@@ -188,9 +282,12 @@ $("#setup-giocatori").addEventListener("submit", (ev) => {
 
 function avviaSorteggio(nomi) {
   const b = bozza();
-  app.torneo = creaTorneo({
-    tipo: b.tipo, formato: b.formato, nomi, minuti: b.usaTimer ? b.minuti : null,
-  });
+  const impostazioni = { tipo: b.tipo, formato: b.formato, nomi, minuti: b.usaTimer ? b.minuti : null };
+  if (b.formato === "svizzero") {
+    const { turni, taglio } = opzioniSvizzero(nomi.length);
+    Object.assign(impostazioni, { turni, taglio });
+  }
+  app.torneo = creaTorneo(impostazioni);
   app.matchAperto = null;
   giocatiAperto = false;
   app.schermata = "tabellone";   // se si ricarica durante il sorteggio, si riparte dal tabellone
@@ -246,12 +343,13 @@ function disegnaTabellone() {
   }
   sincronizzaCronologia();   // torneo appena concluso: va in cronologia (serve alla stella)
   $("#info-torneo").textContent = [
-    tr(t.formato === "eliminazione" ? "st.elim" : "st.punti"),
+    nomeFormato(t.formato),
     t.tipo === "standard" ? "Standard" : "Casual",
     tr("tab.giocatori", { n: t.giocatori.length }),
   ].join(" · ");
   disegnaAvanzamento(t);
   if (t.formato === "eliminazione") disegnaBracket(t);
+  else if (t.formato === "svizzero") disegnaSvizzero(t);
   else disegnaPunti(t);
   aggiornaBottoniSuono();
   aggiornaStelle();
@@ -270,10 +368,14 @@ function disegnaAvanzamento(t) {
   const mancano = turno.partite.filter((m) => m.stato !== "conclusa").length;
   const completo = mancano === 0;
   const ultimo = r === t.numeroTurni - 1;
-  const testoBottone = ultimo ? tr("tab.concludi") : tr("tab.prosegui", { turno: nomeTurno(t, r + 1) });
-  const titolo = t.formato === "punti" ? tr("tab.turnodi", { n: r + 1, tot: t.numeroTurni }) : nomeTurno(t, r);
+  // Dall'ultimo turno svizzero si va al top cut
+  const prossimo = t.formato === "svizzero" && r === t.turniSvizzeri - 1 && t.taglio
+    ? tr("sv.top", { k: t.taglio }) : nomeTurno(t, r + 1);
+  const testoBottone = ultimo ? tr("tab.concludi") : tr("tab.prosegui", { turno: prossimo });
+  const titolo = titoloTurno(t, r);
   const conteggio = tr(reali.length === 1 ? "tab.concluse1" : "tab.concluseN", { f: fatte, t: reali.length });
-  const riposa = turno.riposa !== null ? tr("tab.riposa", { nome: esc(nomeGiocatore(t, turno.riposa)) }) : "";
+  const riposa = turno.riposa !== null && turno.riposa !== undefined
+    ? tr(t.formato === "svizzero" ? "tab.bye" : "tab.riposa", { nome: esc(nomeGiocatore(t, turno.riposa)) }) : "";
   const nota = completo ? tr("tab.tutte") : mancano === 1 ? tr("tab.manca1") : tr("tab.mancanoN", { n: mancano });
   box.innerHTML = `
     <div class="avanzamento">
@@ -292,8 +394,9 @@ function disegnaAvanzamento(t) {
 function bannerFinale(t) {
   const tornaHome = `${bottoneStella(t.idCronologia, true)}
     <button type="button" class="btn" data-vai="home">${tr("tab.tornahome")}</button>`;
-  if (t.formato === "eliminazione") {
-    const finale = t.turni[t.numeroTurni - 1].partite[0];
+  const conFinale = t.formato === "eliminazione" || (t.formato === "svizzero" && t.turni.some((tu) => tu.fase === "taglio"));
+  if (conFinale) {
+    const finale = t.turni[t.turni.length - 1].partite[0];
     if (t.campione === null) {
       return `<div class="finale-torneo">
         <span class="label">${tr("tab.concluso")}</span>
@@ -320,7 +423,7 @@ function bannerFinale(t) {
       ${tornaHome}
     </div>`;
   }
-  const c = classifica(t);
+  const c = t.formato === "svizzero" ? classificaSvizzera(t) : classifica(t);
   const gradino = (r, classe) => r ? `<div class="gradino ${classe}">
       <span class="pos">${r.pos}°</span>
       <strong>${esc(r.nome)}</strong>
@@ -365,6 +468,9 @@ function cartaMatch(t, m, r) {
     classe = "conclusa";
   }
 
+  if (t.formato === "svizzero" && !turnoDelTaglio(t, r)) {
+    stato = `${tr("sv.tavolo", { n: t.turni[r].partite.indexOf(m) + 1 })} · ${stato}`;
+  }
   const contenuto = `${riga(m.a, 0)}${riga(m.b, 1)}<span class="st">${stato}</span>`;
   if (!reale) return `<div class="match automatico ${classe}">${contenuto}</div>`;
   const etichetta = `${etichettaMatch(t, r, t.turni[r].partite.indexOf(m))}: ${descriviMatch(t, m)}`;
@@ -381,10 +487,16 @@ function cartaSegnaposto() {
 }
 
 function disegnaBracket(t) {
+  $("#vista-torneo").innerHTML = htmlBracket(t, 0, t.numeroTurni);
+}
+
+// Colonne da "primo" (indice del turno) per "quante" colonne; i turni non ancora creati
+// sono segnaposto "da definire"
+function htmlBracket(t, primo, quante) {
   const colonne = [];
-  for (let r = 0; r < t.numeroTurni; r++) {
+  for (let r = primo; r < primo + quante; r++) {
     const turno = t.turni[r];
-    const nPartite = t.dimensione / 2 ** (r + 1);
+    const nPartite = partiteEliminazione(t, r);
     const carte = [];
     for (let i = 0; i < nPartite; i++) {
       carte.push(`<div class="slot">${turno ? cartaMatch(t, turno.partite[i], r) : cartaSegnaposto()}</div>`);
@@ -398,9 +510,9 @@ function disegnaBracket(t) {
         <div class="colonna-corpo">${gruppi.join("")}</div>
       </div>`);
   }
-  $("#vista-torneo").innerHTML = `
+  return `
     <div class="bracket-scroll">
-      <div class="bracket" style="--colonne:${t.numeroTurni}; --righe:${t.dimensione / 2}">${colonne.join("")}</div>
+      <div class="bracket" style="--colonne:${quante}; --righe:${partiteEliminazione(t, primo)}">${colonne.join("")}</div>
     </div>`;
 }
 
@@ -465,6 +577,119 @@ function disegnaPunti(t) {
     </details>` : ""}`;
 }
 
+// ---------- Svizzero ----------
+
+const percentuale = (x) => `${Math.round(x * 100)}%`;
+
+function tabellaSvizzera(t) {
+  const righe = classificaSvizzera(t).map((r) => `
+    <tr class="${r.pos === 1 && r.giocate > 0 ? "testa" : ""} ${r.ritirato ? "ritirato" : ""}">
+      <td class="pos">${r.pos}</td>
+      <td class="chi">${esc(r.nome)}${r.ritirato ? ` <span class="nota">${tr("sv.ritirato")}</span>` : ""}</td>
+      <td class="num">${r.vinte}</td>
+      <td class="num">${r.perse}</td>
+      <td class="num">${percentuale(r.omw)}</td>
+      <td class="num col-oomw">${percentuale(r.oomw)}</td>
+    </tr>`).join("");
+  return `
+    <div class="tabella-scroll">
+      <table class="classifica">
+        <thead><tr>
+          <th scope="col">#</th><th scope="col">${tr("cl.giocatore")}</th>
+          <th scope="col" class="num" title="${tr("cl.V.t")}">${tr("cl.V")}</th>
+          <th scope="col" class="num" title="${tr("cl.P.t")}">${tr("cl.P")}</th>
+          <th scope="col" class="num" title="${tr("sv.omw.t")}">${tr("sv.omw")}</th>
+          <th scope="col" class="num col-oomw" title="${tr("sv.oomw.t")}">${tr("sv.oomw")}</th>
+        </tr></thead>
+        <tbody>${righe}</tbody>
+      </table>
+    </div>
+    <p class="nota">${tr("sv.legenda")}</p>`;
+}
+
+// Turni svizzeri già giocati (dal più recente), in un riquadro che si apre
+function turniSvizzeriGiocati(t, fino) {
+  if (fino <= 0) return "";
+  const giocati = t.turni.slice(0, fino).map((tu, i) => `
+    <div class="turno-giocato">
+      <h3>${nomeTurno(t, i)}${tu.riposa !== null ? ` <span class="nota">${tr("punti.bye", { nome: esc(nomeGiocatore(t, tu.riposa)) })}</span>` : ""}</h3>
+      <div class="griglia-match">${tu.partite.map((m) => cartaMatch(t, m, i)).join("")}</div>
+    </div>`).reverse().join("");
+  return `<details class="blocco giocati" ${giocatiAperto ? "open" : ""}>
+      <summary>${tr("sv.giocati", { n: fino })}</summary>
+      ${giocati}
+    </details>`;
+}
+
+function disegnaSvizzero(t) {
+  const r = t.turnoCorrente;
+  const turno = t.turni[r];
+  const ritiri = puoRitirare(t)
+    ? `<button type="button" class="btn btn-leggero btn-piccolo" data-azione="ritiri">${tr("sv.ritiri")}</button>` : "";
+  const blocco = (titolo) => `<section class="blocco">
+      <div class="blocco-testa"><h2>${titolo}</h2>${ritiri}</div>
+      ${tabellaSvizzera(t)}
+    </section>`;
+
+  if (turno.fase === "svizzero" && !t.concluso) {
+    const restano = t.turniSvizzeri - r - 1;
+    const nota = restano > 0
+      ? `<p class="nota">${restano === 1 ? tr("sv.manca1") : tr("sv.mancanoN", { n: restano })}</p>`
+      : `<p class="nota">${t.taglio ? tr("sv.poitaglio", { k: t.taglio }) : tr("sv.ultimo")}</p>`;
+    $("#vista-torneo").innerHTML = `
+      <div class="vista-punti">
+        <section class="blocco">
+          <div class="blocco-testa"><h2>${tr("punti.partite")}</h2></div>
+          <div class="griglia-match">${turno.partite.map((m) => cartaMatch(t, m, r)).join("")}</div>
+          ${nota}
+        </section>
+        ${blocco(tr("cl.titolo"))}
+      </div>
+      ${turniSvizzeriGiocati(t, r)}`;
+    return;
+  }
+
+  // Top cut (o torneo finito): tabellone del taglio, poi la classifica dello svizzero
+  const conTaglio = t.turni.some((tu) => tu.fase === "taglio");
+  const tabellone = conTaglio ? htmlBracket(t, t.turniSvizzeri, Math.log2(t.taglio)) : "";
+  $("#vista-torneo").innerHTML = `
+    ${tabellone}
+    <div class="vista-svizzero-fine">${blocco(tr("sv.classifica"))}</div>
+    ${turniSvizzeriGiocati(t, t.turniSvizzeri)}`;
+}
+
+// ---------- Ritiri ----------
+
+function apriRitiri() {
+  disegnaRitiri();
+  apriDialogo($("#dialogo-ritiri"));
+}
+
+function disegnaRitiri() {
+  const t = app.torneo;
+  if (!t || t.formato !== "svizzero") return;
+  const righe = classificaSvizzera(t).slice().sort((x, y) => Number(x.ritirato) - Number(y.ritirato) || x.pos - y.pos);
+  $("#lista-ritiri").innerHTML = righe.map((r) => `
+    <li class="riga-ritiro ${r.ritirato ? "ritirato" : ""}">
+      <span class="chi">${esc(r.nome)}</span>
+      <span class="nota">${r.vinte}–${r.perse}</span>
+      <button type="button" class="btn ${r.ritirato ? "" : "btn-leggero-bordo"}" data-ritiro="${r.id}" data-stato="${r.ritirato ? "1" : "0"}">
+        ${tr(r.ritirato ? "sv.riammetti" : "sv.ritira")}
+      </button>
+    </li>`).join("");
+}
+
+$("#lista-ritiri").addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-ritiro]");
+  const t = app.torneo;
+  if (!b || !t) return;
+  if (!impostaRitiro(t, Number(b.dataset.ritiro), b.dataset.stato !== "1")) return;
+  SUONI.fase();
+  disegnaRitiri();
+  disegnaTabellone();
+  salva();
+});
+
 // Aggiorna solo i minuti rimasti, senza ridisegnare il tabellone
 function aggiornaOrologiTabellone() {
   const t = app.torneo;
@@ -476,6 +701,7 @@ function aggiornaOrologiTabellone() {
 }
 
 $("#vista-torneo").addEventListener("click", (ev) => {
+  if (ev.target.closest("[data-azione=ritiri]")) { apriRitiri(); return; }
   const b = ev.target.closest("[data-match]");
   if (b) apriPannello(b.dataset.match);
 });
@@ -506,7 +732,7 @@ function chiudiPannello() {
   pannelloId = null;
 }
 
-function testoStatoMatch(t, m) {
+function testoStatoMatch(t, m, r) {
   const A = esc(nomeGiocatore(t, m.a));
   const B = esc(nomeGiocatore(t, m.b));
   if (m.stato === "da giocare") return tr("pm.dagiocare");
@@ -518,7 +744,7 @@ function testoStatoMatch(t, m) {
     return tr("pm.incorso", { d: p.risultatiDuel.length + 1, a: A, va: p.vittorie[0], vb: p.vittorie[1], b: B }) + tempo;
   }
   if (m.esito === "doppia sconfitta") {
-    return tr(t.formato === "eliminazione" ? "pm.doppia.elim" : "pm.doppia.punti");
+    return tr(t.formato === "eliminazione" || turnoDelTaglio(t, r) ? "pm.doppia.elim" : "pm.doppia.punti");
   }
   return tr("pm.vince", { v: esc(nomeGiocatore(t, m.vincitore)), punti: punteggioTesto(m.punteggio) });
 }
@@ -586,7 +812,7 @@ function disegnaPannello() {
     <button type="button" class="btn btn-leggero" data-chiudi>${tr("chiudi")}</button>`;
   $("#pannello-corpo").innerHTML = `
     <h2 class="pannello-titolo"><span>${A}</span><span class="contro">${tr("contro")}</span><span>${B}</span></h2>
-    <p class="pannello-stato">${testoStatoMatch(t, m)}</p>
+    <p class="pannello-stato">${testoStatoMatch(t, m, r)}</p>
     ${gioca}
     ${risultato}`;
 }

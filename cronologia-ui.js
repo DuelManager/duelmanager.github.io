@@ -111,7 +111,7 @@ function sintesiVoce(v) {
   if (v.tipo === "torneo") {
     const t = v.torneo;
     let titolo;
-    if (t.formato === "eliminazione") {
+    if (t.formato === "eliminazione" || t.formato === "svizzero") {
       titolo = t.campione !== null
         ? tr("home.campione", { nome: esc(nomeGiocatore(t, t.campione)) })
         : tr("home.senzavincitore");
@@ -120,7 +120,7 @@ function sintesiVoce(v) {
       titolo = tr("home.primo", { nome: primi.join(", ") });
     }
     return {
-      etichetta: `${tr("cr.torneo")} · ${tr(t.formato === "eliminazione" ? "st.elim" : "st.punti")} · ${t.tipo === "standard" ? "Standard" : "Casual"}`,
+      etichetta: `${tr("cr.torneo")} · ${nomeFormato(t.formato)} · ${t.tipo === "standard" ? "Standard" : "Casual"}`,
       titolo,
       sotto: tr("tab.giocatori", { n: t.giocatori.length }),
     };
@@ -230,26 +230,33 @@ function dettaglioDuello(v) {
   }).join("");
 }
 
-// Classifica (a punti) oppure piazzamenti e risultati (eliminazione diretta)
+// Classifica (tutti contro tutti) oppure piazzamenti e risultati (eliminazione e svizzero)
 function dettaglioTorneo(v) {
   const t = v.torneo;
   if (t.formato === "punti") {
     return `<section class="registro"><h4>${tr("tab.classfinale")}</h4>${tabellaClassifica(t)}</section>`;
   }
+  const svizzera = t.formato === "svizzero" ? new Map(classificaSvizzera(t).map((r) => [r.id, r])) : null;
   const pz = piazzamenti(t).map((p) => {
-    const nota = p.turnoEliminato === null
-      ? (p.pos === 1 ? tr("cr.campione") : "")
-      : tr("cr.eliminato", { turno: nomeTurno(t, p.turnoEliminato) });
+    let nota;
+    if (p.pos === 1 && p.id === t.campione) nota = tr("cr.campione");
+    else if (p.turnoEliminato !== null) nota = tr("cr.eliminato", { turno: nomeTurno(t, p.turnoEliminato) });
+    else if (svizzera) nota = tr("cr.sv.bilancio", { v: svizzera.get(p.id).vinte, p: svizzera.get(p.id).perse });
+    else nota = "";
     return `<li class="${p.pos === 1 ? "oro" : ""}">
       <span class="pos">${p.pos}°</span><span class="chi">${esc(p.nome)}</span><span class="nota">${nota}</span>
     </li>`;
   }).join("");
   const risultati = t.turni.map((turno, r) => {
-    const righe = turno.partite.map((m) => rigaRisultato(t, m)).join("");
+    let righe = turno.partite.map((m) => rigaRisultato(t, m)).join("");
+    if (svizzera && turno.riposa !== null && turno.riposa !== undefined) {
+      righe += `<li>${tr("cr.r.bye.sv", { nome: esc(nomeGiocatore(t, turno.riposa)) })}</li>`;
+    }
     return `<div class="risultati-turno"><span class="label">${nomeTurno(t, r)}</span><ul>${righe}</ul></div>`;
   }).reverse().join("");
   return `
     <section class="registro"><h4>${tr("cr.piazzamenti")}</h4><ol class="piazzamenti">${pz}</ol></section>
+    ${svizzera ? `<section class="registro"><h4>${tr("sv.classifica")}</h4>${tabellaSvizzera(t)}</section>` : ""}
     <section class="registro"><h4>${tr("cr.risultati")}</h4>${risultati}</section>`;
 }
 
