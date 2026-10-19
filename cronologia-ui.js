@@ -106,17 +106,18 @@ function tagData(ms) {
   return `<time datetime="${new Date(ms).toISOString()}">${formatData(ms)}</time>`;
 }
 
-// Etichetta, titolo e riga sotto di una voce (testo già sicuro per l'HTML)
-function sintesiVoce(v) {
+// Etichetta, titolo e riga sotto di una voce (testo già sicuro per l'HTML;
+// con pulisci = testo puro serve all'immagine e al PDF)
+function sintesiVoce(v, pulisci = esc) {
   if (v.tipo === "torneo") {
     const t = v.torneo;
     let titolo;
     if (t.formato === "eliminazione" || t.formato === "svizzero") {
       titolo = t.campione !== null
-        ? tr("home.campione", { nome: esc(nomeGiocatore(t, t.campione)) })
+        ? tr("home.campione", { nome: pulisci(nomeGiocatore(t, t.campione)) })
         : tr("home.senzavincitore");
     } else {
-      const primi = classifica(t).filter((r) => r.pos === 1).map((r) => esc(r.nome));
+      const primi = classifica(t).filter((r) => r.pos === 1).map((r) => pulisci(r.nome));
       titolo = tr("home.primo", { nome: primi.join(", ") });
     }
     return {
@@ -126,7 +127,7 @@ function sintesiVoce(v) {
     };
   }
 
-  const [A, B] = v.giocatori.map(esc);
+  const [A, B] = v.giocatori.map(pulisci);
   const etichetta = `${tr("cr.duello")} · ${v.modalita === "standard" ? "Standard" : "Casual"}`;
   if (v.risultato === 0 || v.risultato === 1) {
     const vincitore = v.risultato === 0 ? A : B;
@@ -203,7 +204,7 @@ function dettaglioVoce(v) {
   return `
     <div class="dettaglio-testa">
       <button type="button" class="indietro" data-indietro>${indietro}</button>
-      ${bottoneStella(v.id, true)}
+      <div class="voce-azioni">${bottoneStella(v.id, true)}${bottoneCondividi(v.id)}</div>
     </div>
     <div class="dettaglio-titolo">
       <div class="meta"><span class="label">${s.etichetta}</span>${tagData(v.terminato)}</div>

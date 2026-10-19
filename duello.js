@@ -320,12 +320,13 @@ function aggiorna() {
   salva();
 }
 
-// Stella "Salva nei preferiti" per il duello libero appena finito (i match dei tornei
-// non vanno in cronologia uno per uno: c'è la stella del torneo)
+// Stella "Salva nei preferiti" e "Condividi" per il duello libero appena finito (i match dei
+// tornei non vanno in cronologia uno per uno: c'è la stella del torneo, e si condivide il torneo)
 function stellaEsito() {
   if (matchSulTavolo() || !app.duello || partita !== app.duello.partita) return "";
   const id = partita.modalita === "standard" ? partita.idCronologia : partita.duel.idCronologia;
-  return bottoneStella(id, true);
+  if (!trovaVoce(id)) return "";
+  return `<div class="voce-azioni">${bottoneStella(id, true)}${bottoneCondividi(id)}</div>`;
 }
 
 function disegnaTavolo() {

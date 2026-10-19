@@ -6,6 +6,7 @@ Gestore di partite per Yu-Gi-Oh! giocato con le carte fisiche.
 - Timer da match secondo il regolamento attuale (modalità Standard) o duello libero (Casual)
 - Tornei da 4 a 32 giocatori: eliminazione diretta, svizzero con top cut o tutti contro tutti, con sorteggio e tabellone
 - Cronologia delle ultime 15 partite e preferiti
+- Risultati da condividere: immagine per WhatsApp e social, PDF da stampare
 - In italiano e in inglese
 
 **Apri l'app:** https://duelmanager.github.io

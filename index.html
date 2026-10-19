@@ -588,6 +588,63 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 }
 @media (hover: hover) { .stella.con-testo:hover { border-color: var(--muted); } }
 
+/* ---------- Condividi il risultato (immagine e PDF) ---------- */
+.voce-azioni { display: flex; flex-wrap: wrap; justify-content: center; align-items: stretch; gap: 8px; }
+.dettaglio-testa .voce-azioni { justify-content: flex-end; }
+/* Telefono stretto: stella senza scritta, così Indietro, stella e Condividi stanno su una riga */
+@media (max-width: 420px) {
+  .dettaglio-testa .stella.con-testo { padding: 8px 10px; }
+  .dettaglio-testa .stella.con-testo .stella-testo { display: none; }
+}
+.condividi {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: none;
+  padding: 8px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface);
+  color: var(--ink); font-weight: 600;
+}
+.condividi svg { width: 20px; height: 20px; }
+@media (hover: hover) { .condividi:hover { border-color: var(--muted); } }
+.finestra-condividi { --largh: 560px; }
+.cd-anteprima { background: var(--surface-2); justify-items: center; gap: 12px; padding: 16px; min-height: 160px; }
+.cd-anteprima img {
+  display: block; width: 100%; max-width: 400px; height: auto; border-radius: 12px;
+  box-shadow: 0 6px 22px rgb(0 0 0 / .22);
+}
+.cd-anteprima.pdf img { max-width: 440px; border-radius: 2px; border: 1px solid var(--line); box-shadow: 0 4px 14px rgb(0 0 0 / .12); }
+.cd-attesa { margin: 0; align-self: center; display: flex; align-items: center; gap: 10px; color: var(--muted); padding: 40px 0; }
+.cd-rotella {
+  width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--ink);
+  animation: cd-gira .8s linear infinite;
+}
+@keyframes cd-gira { to { transform: rotate(360deg); } }
+.cd-piede {
+  flex: none; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px 14px;
+  padding: 12px 20px 16px; border-top: 1px solid var(--line);
+}
+.cd-schede button { padding: 6px 16px; }
+.cd-nota { margin: 0; font-size: .85rem; }
+.cd-bottoni { grid-column: 1 / -1; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
+.cd-bottoni .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 10px; font-weight: 600; }
+.cd-bottoni svg { width: 19px; height: 19px; flex: none; }
+@media (max-width: 600px) {
+  .cd-piede { grid-template-columns: minmax(0, 1fr); padding: 10px 16px 14px; }
+  .cd-schede { justify-self: start; }
+  .cd-anteprima { padding: 12px; }
+}
+/* Telefono in orizzontale: anteprima a sinistra, scelte e pulsanti a destra */
+@media (max-height: 540px) and (orientation: landscape) {
+  .finestra-condividi { --largh: 720px; height: calc(100% - 24px - var(--alto) - var(--basso)); }
+  .finestra-condividi[open] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 240px); grid-template-rows: auto minmax(0, 1fr); }
+  .finestra-condividi .finestra-testa { grid-column: 1 / -1; }
+  .cd-anteprima { padding: 10px; }
+  .cd-anteprima img { max-width: 300px; }
+  .cd-anteprima.pdf img { max-width: 340px; }
+  .cd-piede {
+    grid-template-columns: minmax(0, 1fr); align-content: start; border-top: 0; border-left: 1px solid var(--line);
+    padding: 12px 14px; overflow-y: auto;
+  }
+  .cd-bottoni { grid-auto-flow: row; }
+}
+
 /* ---------- Cronologia e preferiti ---------- */
 .schede { display: inline-grid; grid-auto-flow: column; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .schede button {
@@ -851,7 +908,7 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   .esito h2 { font-size: 1.35rem; }
   .esito .azioni { gap: 6px; }
   .esito .btn { padding: 9px 10px; }
-  .esito .stella.con-testo { padding: 6px 12px; }
+  .esito .stella.con-testo, .esito .condividi { padding: 6px 12px; }
   /* Classifica dello svizzero: sul telefono resta la prima percentuale (la seconda è l'ultimo spareggio) */
   .classifica .col-oomw { display: none; }
 }
@@ -878,6 +935,11 @@ details.giocati[open] > summary { margin-bottom: 4px; }
       max(8px, var(--alto)) max(12px, env(safe-area-inset-right, 0px))
       max(8px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
   }
+
+  /* Fine duello: la colonna centrale è stretta, la stella resta senza scritta
+     così stella e Condividi stanno su una riga */
+  .esito .stella.con-testo { padding: 6px 10px; }
+  .esito .stella.con-testo .stella-testo { display: none; }
 
   /* Tavolo: giocatore · centro · giocatore */
   .campo { grid-template-columns: minmax(0, 1fr) minmax(250px, 1.15fr) minmax(0, 1fr); }
@@ -1010,7 +1072,7 @@ details.giocati[open] > summary { margin-bottom: 4px; }
   .finale-torneo .gradino.p1 { order: -1; border-color: var(--oro); }
   .finale-torneo .gradino .pos { font-size: 1.1rem; }
   .finale-torneo .gradino strong { font-size: 1rem; }
-  .finale-torneo .stella.con-testo, .finale-torneo .btn { padding: 6px 12px; }
+  .finale-torneo .stella.con-testo, .finale-torneo .condividi, .finale-torneo .btn { padding: 6px 12px; }
 }
 
 /* ---------- Apertura dell'app (solo telefoni) ----------
@@ -1518,6 +1580,22 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 </dialog>
 
 <!-- Cronologia del duel in corso (sul telefono, da "Strumenti") -->
+<dialog id="dialogo-condividi" class="pannello largo finestra-condividi" aria-labelledby="titolo-condividi">
+  <div class="finestra-testa">
+    <h2 class="titolo-dialogo" id="titolo-condividi" data-t="cd.titolo">Condividi il risultato</h2>
+    <button type="button" class="btn btn-leggero" data-chiudi data-t="chiudi">Chiudi</button>
+  </div>
+  <div class="finestra-corpo cd-anteprima" id="cd-anteprima" aria-live="polite"></div>
+  <div class="cd-piede">
+    <div class="schede cd-schede" role="tablist">
+      <button type="button" role="tab" data-cd-formato="img" aria-selected="true" data-t="cd.immagine">Immagine</button>
+      <button type="button" role="tab" data-cd-formato="pdf" aria-selected="false">PDF</button>
+    </div>
+    <p class="nota cd-nota" id="cd-nota"></p>
+    <div class="cd-bottoni" id="cd-bottoni"></div>
+  </div>
+</dialog>
+
 <dialog id="dialogo-registro" class="pannello largo" aria-labelledby="titolo-registro">
   <div class="finestra-testa">
     <h2 class="titolo-dialogo" id="titolo-registro" data-t="tav.cronologia">Cronologia del duel</h2>
@@ -1592,16 +1670,17 @@ details.giocati[open] > summary { margin-bottom: 4px; }
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="partita.js?v=202610191350"></script>
-<script src="torneo.js?v=202610191350"></script>
-<script src="cronologia.js?v=202610191350"></script>
-<script src="base.js?v=202610191350"></script>
-<script src="lingua.js?v=202610191350"></script>
-<script src="duello.js?v=202610191350"></script>
-<script src="torneo-ui.js?v=202610191350"></script>
-<script src="cronologia-ui.js?v=202610191350"></script>
-<script src="app.js?v=202610191350"></script>
+<script src="partita.js?v=202610191433"></script>
+<script src="torneo.js?v=202610191433"></script>
+<script src="cronologia.js?v=202610191433"></script>
+<script src="base.js?v=202610191433"></script>
+<script src="lingua.js?v=202610191433"></script>
+<script src="duello.js?v=202610191433"></script>
+<script src="torneo-ui.js?v=202610191433"></script>
+<script src="cronologia-ui.js?v=202610191433"></script>
+<script src="condividi.js?v=202610191433"></script>
+<script src="app.js?v=202610191433"></script>
 
-<script src="pwa.js?v=202610191350"></script>
+<script src="pwa.js?v=202610191433"></script>
 </body>
 </html>

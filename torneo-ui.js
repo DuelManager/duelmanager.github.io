@@ -392,7 +392,7 @@ function disegnaAvanzamento(t) {
 }
 
 function bannerFinale(t) {
-  const tornaHome = `${bottoneStella(t.idCronologia, true)}
+  const tornaHome = `<div class="voce-azioni">${bottoneStella(t.idCronologia, true)}${bottoneCondividi(t.idCronologia)}</div>
     <button type="button" class="btn" data-vai="home">${tr("tab.tornahome")}</button>`;
   const conFinale = t.formato === "eliminazione" || (t.formato === "svizzero" && t.turni.some((tu) => tu.fase === "taglio"));
   if (conFinale) {

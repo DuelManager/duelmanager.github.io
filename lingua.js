@@ -343,6 +343,47 @@ const TESTI = {
     "pref.salva": "Salva nei preferiti",
     "pref.salvato": "Nei preferiti",
     "pref.togli": "Togli dai preferiti",
+
+    // ---------- Condividi il risultato ----------
+    "cd.condividi": "Condividi",
+    "cd.titolo": "Condividi il risultato",
+    "cd.immagine": "Immagine",
+    "cd.anteprima": "Anteprima dell'immagine",
+    "cd.preparo": "Preparo l'immagine…",
+    "cd.preparo.pdf": "Preparo il PDF…",
+    "cd.errore": "Non sono riuscito a creare il file. Chiudi e riprova.",
+    "cd.nota.img": "Il riepilogo da mandare su WhatsApp o sui social.",
+    "cd.nota.pdf": "Tutti i dettagli su fogli A4, da stampare o archiviare.",
+    "cd.nota.pdf1": "Tutti i dettagli su un foglio A4, da stampare o archiviare.",
+    "cd.nota.pdfN": "Tutti i dettagli su {n} fogli A4, da stampare o archiviare.",
+    "cd.nota.ios.img": "Dal menu puoi anche salvarla nelle Foto.",
+    "cd.nota.ios.pdf": "Dal menu puoi anche salvarlo in File o stamparlo.",
+    "cd.condividi.salva": "Condividi o salva",
+    "cd.salva": "Salva",
+    "cd.stampa": "Apri per stampare",
+    "cd.copia": "Copia",
+    "cd.copiata": "Immagine copiata: incollala dove vuoi.",
+    "cd.copia.no": "Non è stato possibile copiare l'immagine.",
+    "cd.condividi.no": "Condivisione non riuscita: prova con Salva.",
+    "cd.vince": "Vince",
+    "cd.duelvinti": "Duel vinti",
+    "cd.duelmatch": "I duel del match",
+    "cd.lp.finali": "LP finali",
+    "cd.andamento": "Andamento dei life point",
+    "cd.inizia": "Inizia {nome}",
+    "cd.turni": "{n} turni",
+    "cd.minuti": "{n} min a turno",
+    "cd.senzatempo": "senza limite di tempo",
+    "cd.bilancio": "{v} vinte · {p} perse",
+    "cd.primo": "Primo posto",
+    "cd.primi": "Primo posto a pari merito",
+    "cd.quando": "Turno · fase",
+    "cd.risultato": "Risultato",
+    "cd.note": "Note",
+    "cd.riposa": "riposa",
+    "cd.ds": "doppia sconfitta",
+    "cd.pagina": "Pagina {n} di {tot}",
+    "cd.creato": "Creato con DuelManager",
     "cr.indietro": "← Cronologia",
     "pref.indietro": "← Preferiti",
     "cr.duello": "Duello",
@@ -705,6 +746,47 @@ const TESTI = {
     "pref.salva": "Save to favorites",
     "pref.salvato": "In favorites",
     "pref.togli": "Remove from favorites",
+
+    // ---------- Share the result ----------
+    "cd.condividi": "Share",
+    "cd.titolo": "Share the result",
+    "cd.immagine": "Image",
+    "cd.anteprima": "Image preview",
+    "cd.preparo": "Preparing the image…",
+    "cd.preparo.pdf": "Preparing the PDF…",
+    "cd.errore": "Couldn't create the file. Close and try again.",
+    "cd.nota.img": "A summary to send on WhatsApp or social media.",
+    "cd.nota.pdf": "All the details on A4 pages, to print or keep.",
+    "cd.nota.pdf1": "All the details on one A4 page, to print or keep.",
+    "cd.nota.pdfN": "All the details on {n} A4 pages, to print or keep.",
+    "cd.nota.ios.img": "The menu also lets you save it to Photos.",
+    "cd.nota.ios.pdf": "The menu also lets you save it to Files or print it.",
+    "cd.condividi.salva": "Share or save",
+    "cd.salva": "Save",
+    "cd.stampa": "Open to print",
+    "cd.copia": "Copy",
+    "cd.copiata": "Image copied: paste it anywhere.",
+    "cd.copia.no": "Couldn't copy the image.",
+    "cd.condividi.no": "Sharing failed: try Save instead.",
+    "cd.vince": "Winner",
+    "cd.duelvinti": "Duels won",
+    "cd.duelmatch": "Duels in the match",
+    "cd.lp.finali": "Final LP",
+    "cd.andamento": "Life points over the duel",
+    "cd.inizia": "{nome} went first",
+    "cd.turni": "{n} rounds",
+    "cd.minuti": "{n} min per round",
+    "cd.senzatempo": "no time limit",
+    "cd.bilancio": "{v} won · {p} lost",
+    "cd.primo": "First place",
+    "cd.primi": "Tied for first place",
+    "cd.quando": "Turn · phase",
+    "cd.risultato": "Result",
+    "cd.note": "Notes",
+    "cd.riposa": "sits out",
+    "cd.ds": "double loss",
+    "cd.pagina": "Page {n} of {tot}",
+    "cd.creato": "Made with DuelManager",
     "cr.indietro": "← History",
     "pref.indietro": "← Favorites",
     "cr.duello": "Duel",
@@ -779,6 +861,7 @@ const REGOLE = {
         <li>L'orologio nella Home apre la cronologia: le ultime 15 partite concluse, con data e ora. Quando ne arriva una nuova, la più vecchia si cancella.</li>
         <li>Nello Standard una partita è il match intero; nel Casual ogni duel finito è una partita a sé. Aprendo un duello vedi il registro dei life point di ogni duel; aprendo un torneo vedi la classifica o i piazzamenti.</li>
         <li>Tocca la stella, nella cronologia o alla fine di un duello o di un torneo: diventa gialla e la partita va nei preferiti, dove resta anche quando esce dalla cronologia.</li>
+        <li>"Condividi", alla fine di un duello o di un torneo e nella cronologia, crea il risultato in due forme: un'immagine con il riepilogo, da mandare su WhatsApp o sui social, e un PDF con tutti i dettagli (registro dei life point, classifica, risultati di ogni turno) da stampare o archiviare. Sul telefono si apre il menu per condividere o salvare il file; sul computer si salva.</li>
       </ul>
     </section>
     <section>
@@ -836,6 +919,7 @@ const REGOLE = {
         <li>The clock on the Home screen opens the history: the last 15 finished games, with date and time. When a new one arrives, the oldest is deleted.</li>
         <li>In Standard a game is the whole match; in Casual every finished duel is a game of its own. Open a duel to see the life point log of each duel; open a tournament to see the standings or placements.</li>
         <li>Tap the star, in the history or at the end of a duel or tournament: it turns yellow and the game goes to your favorites, where it stays even after it leaves the history.</li>
+        <li>"Share", at the end of a duel or tournament and in the history, makes the result in two forms: an image with the summary, to send on WhatsApp or social media, and a PDF with all the details (life point log, standings, results of every round) to print or keep. On a phone it opens the menu to share or save the file; on a computer it saves it.</li>
       </ul>
     </section>
     <section>

@@ -9,7 +9,7 @@ const CACHE = "duelmanager-v1";
 const FILE_APP = [
   "./", "index.html", "manifest.webmanifest", "pwa.js",
   "partita.js", "torneo.js", "cronologia.js", "base.js", "lingua.js",
-  "duello.js", "torneo-ui.js", "cronologia-ui.js", "app.js",
+  "duello.js", "torneo-ui.js", "cronologia-ui.js", "condividi.js", "app.js",
   "icona-192.png", "icona-512.png", "icona-180.png", "icona-32.png", "icona-tonda-512.png",
 ];
 
